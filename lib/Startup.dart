@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'MainPage.dart';
+import 'package:tastebud/LogInPage.dart';
 
 // The main entry point of the app.
 void main() => runApp(MyApp());
@@ -12,9 +12,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MainPage',  // The title of the app, used for the task switcher.
       theme: ThemeData(
-        primarySwatch: Colors.blue,  // The primary color palette of the app.
+        primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: MainPage(),  // The default route of the app.
+      home: LoginPage(),  // The default route of the app.
     );
   }
 }

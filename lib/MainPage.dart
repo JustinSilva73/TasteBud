@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -11,6 +12,20 @@ class MainPage extends StatefulWidget {
 
 // _MainPageState holds the mutable state for MainPage.
 class _MainPageState extends State<MainPage> {
+  String? storedEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoredEmail();
+  }
+
+  _loadStoredEmail() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      storedEmail = prefs.getString('storedEmail');
+    });
+  }
 
   List<Restaurant> restaurants = [
     Restaurant("Joe's ", '123 Main St', 'American'),
@@ -24,7 +39,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Restaurants"),
+        title: Text("Restaurant"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
