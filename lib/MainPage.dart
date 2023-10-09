@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -13,11 +14,14 @@ class MainPage extends StatefulWidget {
 // _MainPageState holds the mutable state for MainPage.
 class _MainPageState extends State<MainPage> {
   String? storedEmail;
+  Position? currentPosition;
 
   @override
   void initState() {
     super.initState();
     _loadStoredEmail();
+    _determinePosition();
+
   }
 
   _loadStoredEmail() async {
@@ -26,7 +30,35 @@ class _MainPageState extends State<MainPage> {
       storedEmail = prefs.getString('storedEmail');
     });
   }
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Handle location services being not enabled here
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      // Handle this case: Permissions are denied forever
+      return Future.error('Location permissions are permanently denied. We cannot request permissions.');
+    }
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        // Handle permissions being denied
+        return Future.error('Location permissions are denied (actual value: $permission).');
+      }
+    }
+
+    // If permissions are granted, get the current position
+    currentPosition = await Geolocator.getCurrentPosition();
+    print(currentPosition);  // You can print or use the current position now
+  }
   List<Restaurant> restaurants = [
     Restaurant("Joe's ", '123 Main St', 'American'),
     Restaurant("Tasty Treats", '456 Elm St', 'Italian'),
