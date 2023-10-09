@@ -1,9 +1,10 @@
-// Required Flutter import.
+
 import 'package:flutter/material.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -15,13 +16,14 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   String? storedEmail;
   Position? currentPosition;
+  Key mapKey = Key('mapKey');
+  late Future<Position?> positionFuture;
 
   @override
   void initState() {
     super.initState();
     _loadStoredEmail();
-    _determinePosition();
-
+    positionFuture = _determinePosition(); // cache the future
   }
 
   _loadStoredEmail() async {
@@ -30,19 +32,20 @@ class _MainPageState extends State<MainPage> {
       storedEmail = prefs.getString('storedEmail');
     });
   }
-  Future<void> _determinePosition() async {
+
+  Future<Position?> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Handle location services being not enabled here
+      print("Location services are disabled."); // Logging
       return Future.error('Location services are disabled.');
     }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.deniedForever) {
-      // Handle this case: Permissions are denied forever
+      print("Location permissions are permanently denied."); // Logging
       return Future.error('Location permissions are permanently denied. We cannot request permissions.');
     }
 
@@ -50,15 +53,23 @@ class _MainPageState extends State<MainPage> {
       permission = await Geolocator.requestPermission();
       if (permission != LocationPermission.whileInUse &&
           permission != LocationPermission.always) {
-        // Handle permissions being denied
+        print("Location permissions are denied: $permission"); // Logging
         return Future.error('Location permissions are denied (actual value: $permission).');
       }
     }
 
     // If permissions are granted, get the current position
     currentPosition = await Geolocator.getCurrentPosition();
-    print(currentPosition);  // You can print or use the current position now
+    print("Current Position: $currentPosition");  // Logging
+
+    // Rebuild the widget now that we have a position.
+
+    return currentPosition; // Return the position here
+
   }
+
+
+
   List<Restaurant> restaurants = [
     Restaurant("Joe's ", '123 Main St', 'American'),
     Restaurant("Tasty Treats", '456 Elm St', 'Italian'),
@@ -83,16 +94,45 @@ class _MainPageState extends State<MainPage> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: restaurants.length,  // The number of items in the list.
-        // Function that returns the widget for a specific item in the list.
-        itemBuilder: (context, index) {
-          return RestaurantItem(restaurant: restaurants[index]);
-        },
+      body: Column(
+        children: [
+          Container(
+            height: 200,
+            child: FutureBuilder<Position?>(
+              future: positionFuture, // use the cached future
+              builder: (BuildContext context, AsyncSnapshot<Position?> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.data != null) {
+                    return GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(snapshot.data!.latitude, snapshot.data!.longitude),
+                        zoom: 14.4746,
+                      ),
+                    );
+                  } else {
+                    return Center(child: Text("Location not available"));
+                  }
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+          ),
+          // List of restaurants
+          Expanded(
+            child: ListView.builder(
+              itemCount: restaurants.length,
+              itemBuilder: (context, index) {
+                return RestaurantItem(restaurant: restaurants[index]);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 // A simple Dart class to represent a restaurant's data.
 class Restaurant {
