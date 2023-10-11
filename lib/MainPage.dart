@@ -5,6 +5,7 @@ import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_webservice/places.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -18,6 +19,10 @@ class _MainPageState extends State<MainPage> {
   Position? currentPosition;
   Key mapKey = Key('mapKey');
   late Future<Position?> positionFuture;
+  Set<Circle> _circles = {};  // Initialize the set of circles here.
+  Set<Marker> _restaurantMarkers = {};
+  List<Restaurant> restaurants = [];
+  GoogleMapController? mapController;
 
   @override
   void initState() {
@@ -31,6 +36,55 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       storedEmail = prefs.getString('storedEmail');
     });
+  }
+
+  final places = GoogleMapsPlaces(apiKey: 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc');
+
+  Future<List<PlacesSearchResult>> fetchNearbyRestaurants(LatLng location) async {
+    final response = await places.searchNearbyWithRadius(
+      Location(lat: location.latitude, lng: location.longitude),
+      24140,  // 15 miles in meters
+      type: 'restaurant',
+    );
+
+    if (response.status == "OK") {
+      return response.results;
+    } else {
+      print("Failed to fetch places: ${response.errorMessage}");
+      return [];
+    }
+  }
+
+  void _setRestaurantMarkers(List<PlacesSearchResult> fetchedRestaurants) {
+    Set<Marker> tempMarkers = {};
+    List<Restaurant> tempRestaurants = [];
+
+    for (var restaurant in fetchedRestaurants) {
+      final marker = Marker(
+        markerId: MarkerId(restaurant.placeId),
+        position: LatLng(restaurant.geometry!.location.lat, restaurant.geometry!.location.lng),
+        infoWindow: InfoWindow(title: restaurant.name, snippet: restaurant.vicinity),
+      );
+
+      tempMarkers.add(marker);
+      tempRestaurants.add(
+        Restaurant(
+          restaurant.name,
+          restaurant.vicinity!,
+          "Cuisine type not provided by API",  // Modify as per API data, if available.
+          LatLng(restaurant.geometry!.location.lat, restaurant.geometry!.location.lng),
+        ),
+      );
+    }
+
+    setState(() {
+      _restaurantMarkers = tempMarkers;
+      restaurants = tempRestaurants;
+    });
+    if (restaurants.isNotEmpty) {
+      LatLngBounds bounds = _boundsOfRestaurants(restaurants);
+      _updateCameraBounds(bounds);
+    }
   }
 
   Future<Position?> _determinePosition() async {
@@ -62,20 +116,44 @@ class _MainPageState extends State<MainPage> {
     currentPosition = await Geolocator.getCurrentPosition();
     print("Current Position: $currentPosition");  // Logging
 
-    // Rebuild the widget now that we have a position.
+    // Fetch nearby restaurants and set markers
+    final fetchedRestaurants = await fetchNearbyRestaurants(LatLng(currentPosition!.latitude, currentPosition!.longitude));
+    _setRestaurantMarkers(fetchedRestaurants);
+
+    // Add a circle overlay for the current position
+    _circles.add(
+      Circle(
+        circleId: CircleId("currentLocationCircle"),
+        center: LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        radius: 50,  // Adjust the radius as needed.
+        fillColor: Colors.blue.withOpacity(0.5),  // Color for the circle fill.
+        strokeWidth: 2,  // Width of the circle border.
+        strokeColor: Colors.blue,  // Color of the circle border.
+      ),
+    );
 
     return currentPosition; // Return the position here
+  }
+  LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants) {
+    double minLat = restaurants[0].location.latitude;
+    double maxLat = restaurants[0].location.latitude;
+    double minLng = restaurants[0].location.longitude;
+    double maxLng = restaurants[0].location.longitude;
 
+    for (var restaurant in restaurants) {
+      if (restaurant.location.latitude < minLat) minLat = restaurant.location.latitude;
+      if (restaurant.location.latitude > maxLat) maxLat = restaurant.location.latitude;
+      if (restaurant.location.longitude < minLng) minLng = restaurant.location.longitude;
+      if (restaurant.location.longitude > maxLng) maxLng = restaurant.location.longitude;
+    }
+
+    return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
   }
 
-
-
-  List<Restaurant> restaurants = [
-    Restaurant("Joe's ", '123 Main St', 'American'),
-    Restaurant("Tasty Treats", '456 Elm St', 'Italian'),
-    // ... Add more restaurants as needed
-  ];
-
+  Future<void> _updateCameraBounds(LatLngBounds bounds) async {
+    await Future.delayed(Duration(milliseconds: 300));
+    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+  }
 
   // The build method describes the part of the UI represented by the widget.
   @override
@@ -88,8 +166,9 @@ class _MainPageState extends State<MainPage> {
             icon: Icon(Icons.search),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => SearchPage(),
+                builder: (context) => SearchPage(allRestaurants: restaurants),
               ));
+
             },
           )
         ],
@@ -97,22 +176,41 @@ class _MainPageState extends State<MainPage> {
       body: Column(
         children: [
           Container(
-            height: 200,
+            height: 200,  // Setting a fixed height for the map.
             child: FutureBuilder<Position?>(
-              future: positionFuture, // use the cached future
+              future: positionFuture,  // This is the future that gets the user's location.
               builder: (BuildContext context, AsyncSnapshot<Position?> snapshot) {
+                // Check if the Future is complete.
                 if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.data != null) {
+
+                  // If we have valid position data.
+                  if (snapshot.hasData && snapshot.data != null) {
+                    Position position = snapshot.data!;
+
                     return GoogleMap(
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;  // Storing the map controller for future use.
+
+                        // If there are any restaurants fetched before the map was created, we should set the bounds immediately.
+                        if (restaurants.isNotEmpty) {
+                          LatLngBounds bounds = _boundsOfRestaurants(restaurants);
+                          _updateCameraBounds(bounds);
+                        }
+                      },
+                      // Setting the initial position of the map to the user's current location.
                       initialCameraPosition: CameraPosition(
-                        target: LatLng(snapshot.data!.latitude, snapshot.data!.longitude),
-                        zoom: 14.4746,
+                        target: LatLng(position.latitude, position.longitude),
+                        zoom: 14.4746,  // Initial zoom level. Adjust this based on preference.
                       ),
+                      markers: _restaurantMarkers,  // Display all the restaurant markers on the map.
+                      circles: _circles,  // Display the circle around the user's current location.
                     );
                   } else {
+                    // If there's no position data available, show an error message.
                     return Center(child: Text("Location not available"));
                   }
                 } else {
+                  // While the Future is still running, show a loading indicator.
                   return Center(child: CircularProgressIndicator());
                 }
               },
@@ -136,12 +234,12 @@ class _MainPageState extends State<MainPage> {
 
 // A simple Dart class to represent a restaurant's data.
 class Restaurant {
-  final String name;  // Restaurant's name.
-  final String address;  // Restaurant's address.
-  final String cuisine;  // URL to the restaurant's image.
+  final String name;
+  final String address;
+  final String cuisine;
+  final LatLng location;
 
-  // Constructor to initialize the Restaurant object.
-  Restaurant(this.name, this.address, this.cuisine);
+  Restaurant(this.name, this.address, this.cuisine, this.location);
 }
 
 // Stateless widget to represent a single restaurant item.

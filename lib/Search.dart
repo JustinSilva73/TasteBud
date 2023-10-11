@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'RestaurantDetailPage.dart';
 import 'MainPage.dart';
 
 class SearchPage extends StatefulWidget {
+  final List<Restaurant> allRestaurants; // <-- Define the variable here
+
+  // Modify the constructor to accept the named parameter
+  SearchPage({required this.allRestaurants});
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -14,14 +18,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    _allRestaurants = [
-      Restaurant("Joe's Diner", '123 Main St', 'American'),
-      Restaurant("Tasty Treats", '456 Elm St', 'Italian'),
-      Restaurant("New Restaurant 1", '789 Maple St', 'Cuisine Type'),
-      Restaurant("New Restaurant 2", '012 Oak St', 'Cuisine Type'),
-      // ... Add other new restaurants specific to SearchPage
-    ];
+    _allRestaurants = widget.allRestaurants; // Use the variable from the widget
   }
+
 
   @override
   Widget build(BuildContext context) {
