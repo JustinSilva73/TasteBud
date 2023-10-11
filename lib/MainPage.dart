@@ -9,6 +9,7 @@ import 'package:google_maps_webservice/places.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
+  const MainPage({super.key});
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -17,9 +18,9 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   String? storedEmail;
   Position? currentPosition;
-  Key mapKey = Key('mapKey');
+  Key mapKey = const Key('mapKey');
   late Future<Position?> positionFuture;
-  Set<Circle> _circles = {};  // Initialize the set of circles here.
+  final Set<Circle> _circles = {};  // Initialize the set of circles here.
   Set<Marker> _restaurantMarkers = {};
   List<Restaurant> restaurants = [];
   GoogleMapController? mapController;
@@ -123,9 +124,9 @@ class _MainPageState extends State<MainPage> {
     // Add a circle overlay for the current position
     _circles.add(
       Circle(
-        circleId: CircleId("currentLocationCircle"),
+        circleId: const CircleId("currentLocationCircle"),
         center: LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        radius: 50,  // Adjust the radius as needed.
+        radius: 400,  // Adjust the radius as needed.
         fillColor: Colors.blue.withOpacity(0.5),  // Color for the circle fill.
         strokeWidth: 2,  // Width of the circle border.
         strokeColor: Colors.blue,  // Color of the circle border.
@@ -151,7 +152,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _updateCameraBounds(LatLngBounds bounds) async {
-    await Future.delayed(Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 300));
     mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   }
 
@@ -160,22 +161,21 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Restaurant"),
+        title: const Text("Restaurant"),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => SearchPage(allRestaurants: restaurants),
               ));
-
             },
           )
         ],
       ),
       body: Column(
         children: [
-          Container(
+          SizedBox(
             height: 200,  // Setting a fixed height for the map.
             child: FutureBuilder<Position?>(
               future: positionFuture,  // This is the future that gets the user's location.
@@ -207,11 +207,11 @@ class _MainPageState extends State<MainPage> {
                     );
                   } else {
                     // If there's no position data available, show an error message.
-                    return Center(child: Text("Location not available"));
+                    return const Center(child: Text("Location not available"));
                   }
                 } else {
                   // While the Future is still running, show a loading indicator.
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
               },
             ),
@@ -247,12 +247,12 @@ class RestaurantItem extends StatelessWidget {
   final Restaurant restaurant;
 
   // Constructor to initialize the RestaurantItem widget with a Restaurant object.
-  RestaurantItem({required this.restaurant});
+  const RestaurantItem({super.key, required this.restaurant});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(4.0),  // Outer spacing for the card.
+      margin: const EdgeInsets.all(4.0),  // Outer spacing for the card.
       elevation: 0.0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(5.0),

@@ -28,11 +28,10 @@ class _SearchPageState extends State<SearchPage> {
       return restaurant.name.toLowerCase().contains(_searchText.toLowerCase()) ||
           restaurant.cuisine.toLowerCase().contains(_searchText.toLowerCase());
     }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: TextField(
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Search...',
             border: InputBorder.none,
           ),
