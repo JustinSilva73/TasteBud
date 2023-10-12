@@ -31,8 +31,10 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: TextField(
+          style: TextStyle(color: Colors.white), // This line sets the text color to white
           decoration: const InputDecoration(
             hintText: 'Search...',
+            hintStyle: TextStyle(color: Colors.white), // This sets the hint text color to a slightly transparent white
             border: InputBorder.none,
           ),
           onChanged: (value) {

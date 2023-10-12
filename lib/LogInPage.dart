@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
             // Create Account Button
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => CreateAccountPage()), // Assumes you have a CreateAccountPage widget
                 );
