@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'RestaurantDetailPage.dart';
 import 'MainPage.dart';
 
 class SearchPage extends StatefulWidget {
+  final List<Restaurant> allRestaurants; // <-- Define the variable here
+
+  // Modify the constructor to accept the named parameter
+  SearchPage({required this.allRestaurants});
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -14,14 +18,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    _allRestaurants = [
-      Restaurant("Joe's Diner", '123 Main St', 'American'),
-      Restaurant("Tasty Treats", '456 Elm St', 'Italian'),
-      Restaurant("New Restaurant 1", '789 Maple St', 'Cuisine Type'),
-      Restaurant("New Restaurant 2", '012 Oak St', 'Cuisine Type'),
-      // ... Add other new restaurants specific to SearchPage
-    ];
+    _allRestaurants = widget.allRestaurants; // Use the variable from the widget
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +28,13 @@ class _SearchPageState extends State<SearchPage> {
       return restaurant.name.toLowerCase().contains(_searchText.toLowerCase()) ||
           restaurant.cuisine.toLowerCase().contains(_searchText.toLowerCase());
     }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: TextField(
-          decoration: InputDecoration(
+          style: TextStyle(color: Colors.white), // This line sets the text color to white
+          decoration: const InputDecoration(
             hintText: 'Search...',
+            hintStyle: TextStyle(color: Colors.white), // This sets the hint text color to a slightly transparent white
             border: InputBorder.none,
           ),
           onChanged: (value) {

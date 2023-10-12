@@ -34,6 +34,19 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     });
   }
 
+  bool isValidEmail(String email) {
+    final pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
+    final regExp = RegExp(pattern);
+    return regExp.hasMatch(email);
+  }
+  bool isValidPassword(String password) {
+    final pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    final regExp = RegExp(pattern);
+
+    return regExp.hasMatch(password);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,18 +106,41 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 String email = _emailController.text;
                 String password = _passwordController.text;
 
-                // Handle create account logic here. For now, we'll print the values.
-                print("First Name: $firstName");
-                print("Last Name: $lastName");
-                print("Email: $email");
-                print("Password: $password");
-                await _saveEmailToStorage(email);
 
-                // ignore: use_build_context_synchronously
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => SurveyPage()), // Assumes you have a CreateAccountPage widget
-                );                // Maybe reroute to a confirmation page, or back to login, etc.
+                if (!isValidEmail(email)) {
+                  // Show some feedback to the user about invalid email
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter a valid email!')),
+                  );
+                  return;
+                }
+
+                if (!isValidPassword(password)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Password should be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character!')),
+                  );
+                  return;
+                }
+
+                if (firstName == "" || lastName == ""){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please fill in all fields!')),
+                  );
+                }else {
+                  print("First Name: $firstName");
+                  print("Last Name: $lastName");
+                  print("Email: $email");
+                  print("Password: $password");
+                  await _saveEmailToStorage(email);
+
+                  // ignore: use_build_context_synchronously
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => SurveyPage()), // Assumes you have a CreateAccountPage widget
+                  );
+                }
+                // Handle create account logic here. For now, we'll print the values.
+                               // Maybe reroute to a confirmation page, or back to login, etc.
               },
               child: Text("Create Account"),
             ),

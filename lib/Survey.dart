@@ -22,7 +22,7 @@ class _SurveyPageState extends State<SurveyPage> {
           padding: EdgeInsets.all(16.0),
           children: [
             // Question 1
-            Text("How many days a week do you like to go out"),
+            Text("How many days a week do you usually go out to dinner?"),
             RadioListTile(
               value: 1,
               groupValue: answer1,
@@ -74,7 +74,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer2 = value;
                 });
               },
-              title: Text("\$"),
+              title: Text("\$10-20"),
             ),
             RadioListTile(
               value: 2,
@@ -84,7 +84,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer2 = value;
                 });
               },
-              title: Text("\$-\$\$"),
+              title: Text("\$30-40"),
             ),
             RadioListTile(
               value: 3,
@@ -94,7 +94,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer2 = value;
                 });
               },
-              title: Text("Bird"),
+              title: Text("\$50-60"),
             ),
             RadioListTile(
               value: 4,
@@ -104,11 +104,11 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer2 = value;
                 });
               },
-              title: Text("Fish"),
+              title: Text("\$70+"),
             ),
 
             // Question 3
-            Text("Question 3: Your favorite season?"),
+            Text("Your favorite food from this list?"),
             RadioListTile(
               value: 1,
               groupValue: answer3,
@@ -117,7 +117,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer3 = value;
                 });
               },
-              title: Text("Summer"),
+              title: Text("Carrots"),
             ),
             RadioListTile(
               value: 2,
@@ -127,7 +127,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer3 = value;
                 });
               },
-              title: Text("Winter"),
+              title: Text("Hamburger"),
             ),
             RadioListTile(
               value: 3,
@@ -137,7 +137,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer3 = value;
                 });
               },
-              title: Text("Spring"),
+              title: Text("Spaghetti"),
             ),
             RadioListTile(
               value: 4,
@@ -147,7 +147,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   answer3 = value;
                 });
               },
-              title: Text("Autumn"),
+              title: Text("Macaroni and Cheese"),
             ),
 
             SizedBox(height: 20),
