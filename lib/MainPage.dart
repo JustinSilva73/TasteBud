@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -39,19 +41,18 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  final places = GoogleMapsPlaces(apiKey: 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc');
 
-  Future<List<PlacesSearchResult>> fetchNearbyRestaurants(LatLng location) async {
-    final response = await places.searchNearbyWithRadius(
-      Location(lat: location.latitude, lng: location.longitude),
-      24140,  // 15 miles in meters
-      type: 'restaurant',
+  Future<List<PlacesSearchResult>> fetchNearbyRestaurantsFromServer(LatLng location) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}'),
     );
-
-    if (response.status == "OK") {
-      return response.results;
+    if (response.statusCode == 200) {
+      // Assuming server returns a list of restaurant data
+      var jsonResponse = jsonDecode(response.body);
+      print("Success pulling from server");
+      return List<PlacesSearchResult>.from(jsonResponse.map((i) => PlacesSearchResult.fromJson(i)));
     } else {
-      print("Failed to fetch places: ${response.errorMessage}");
+      print("Failed to fetch restaurants from server");
       return [];
     }
   }
@@ -118,7 +119,7 @@ class _MainPageState extends State<MainPage> {
     print("Current Position: $currentPosition");  // Logging
 
     // Fetch nearby restaurants and set markers
-    final fetchedRestaurants = await fetchNearbyRestaurants(LatLng(currentPosition!.latitude, currentPosition!.longitude));
+    final fetchedRestaurants = await fetchNearbyRestaurantsFromServer(LatLng(currentPosition!.latitude, currentPosition!.longitude));
     _setRestaurantMarkers(fetchedRestaurants);
 
     // Add a circle overlay for the current position
