@@ -12,11 +12,12 @@ const connection = mysql.createConnection({
     port: PORT
 });
 */
-const googleMapsRoutes = require('./routes/GoogleMapsLogic');
-const yelpRoutes = require('./routes/YelpLogic');
+const googleMapsRoutes = require('./routes/Google/GoogleMapsLogic');
+const googleMapsRoutesTest = require('./routes/Google/TEST_GoogleMapsLogic');
 
 app.use('/googleAPI', googleMapsRoutes);
-app.use('/yelpAPI', yelpRoutes);
+
+app.use('/TESTgoogleAPI', googleMapsRoutesTest);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });

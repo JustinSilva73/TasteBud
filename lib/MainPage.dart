@@ -181,6 +181,9 @@ class _MainPageState extends State<MainPage> {
             child: FutureBuilder<Position?>(
               future: positionFuture,  // This is the future that gets the user's location.
               builder: (BuildContext context, AsyncSnapshot<Position?> snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
                 // Check if the Future is complete.
                 if (snapshot.connectionState == ConnectionState.done) {
 

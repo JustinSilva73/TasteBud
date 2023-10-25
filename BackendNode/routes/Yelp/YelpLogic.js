@@ -3,7 +3,29 @@ const axios = require('axios');
 const router = express.Router();
 
 const YELP_API_KEY = 'lGDedEU4j67hTkD58rj9kgeL1uKLRtqtX-LZkVZF3aBTJmNVMZfGUasXj7HXaxthZDG3StXwCbAKyjwgv3Huh85tAgnj_60On557Jqvj14HfV53qGMkbhROBCC8oZXYx';
+const getYelpRestaurantDetails = async (address) => {
+    const options = {
+        method: 'GET',
+        url: `https://api.yelp.com/v3/businesses/search?location=${address}&term=restaurant&categories=&open_now=true&sort_by=distance&limit=1`,
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${YELP_API_KEY}`
+        }
+    };
 
+    try {
+        const response = await axios.request(options);
+        return {
+            imageUrl: response.data.businesses[0].image_url,
+            price: response.data.businesses[0].price,
+            categories: response.data.businesses[0].categories.map(category => category.title)
+        };
+    } catch (error) {
+        console.error('Error fetching from Yelp API:', error);
+        throw new Error('Failed to fetch data from Yelp API.');
+    }
+};
+/*
 router.get('/restaurantDetails', async (req, res) => {
     const { address } = req.query;
 
@@ -31,6 +53,6 @@ router.get('/restaurantDetails', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch data from Yelp API.' });
     }
 });
+*/
 
-
-module.exports = router;
+module.exports = getYelpRestaurantDetails;
