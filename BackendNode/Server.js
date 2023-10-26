@@ -23,7 +23,8 @@ app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
-app.listen(3000, '0.0.0.0', function() {
-    console.log('Listening on port 3000...');
-  });
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Server started on http://0.0.0.0:3000');
+});
+
   

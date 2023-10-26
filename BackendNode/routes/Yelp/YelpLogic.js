@@ -15,16 +15,38 @@ const getYelpRestaurantDetails = async (address) => {
 
     try {
         const response = await axios.request(options);
+
+        // Log rate-limit headers
+        const rateLimit = response.headers["ratelimit-limit"];
+        const rateRemaining = response.headers["ratelimit-remaining"];
+        const rateReset = response.headers["ratelimit-reset"];
+
+        console.log(`Rate Limit: ${rateLimit}`);
+        console.log(`Rate Remaining: ${rateRemaining}`);
+        console.log(`Rate Reset: ${rateReset} (time in seconds until reset)`);
+
         return {
             imageUrl: response.data.businesses[0].image_url,
-            price: response.data.businesses[0].price,
             categories: response.data.businesses[0].categories.map(category => category.title)
         };
     } catch (error) {
+        // Additionally, if you want to inspect error response headers
+        if (error.response && error.response.headers) {
+            const rateLimit = error.response.headers["ratelimit-limit"];
+            const rateRemaining = error.response.headers["ratelimit-remaining"];
+            const rateReset = error.response.headers["ratelimit-reset"];
+            
+            console.log(`(Error) Rate Limit: ${rateLimit}`);
+            console.log(`(Error) Rate Remaining: ${rateRemaining}`);
+            console.log(`(Error) Rate Reset: ${rateReset} (time in seconds until reset)`);
+        }
+
         console.error('Error fetching from Yelp API:', error);
         throw new Error('Failed to fetch data from Yelp API.');
     }
 };
+
+
 /*
 router.get('/restaurantDetails', async (req, res) => {
     const { address } = req.query;

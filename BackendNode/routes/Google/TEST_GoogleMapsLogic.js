@@ -5,8 +5,8 @@ const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc';
 
-const getRestaurantDetails = async (latitude, longitude, limit = 25) => {
-    const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=24140&type=restaurant&opennow=true&key=${GOOGLE_MAPS_API_KEY}&limit=${limit}`);
+const getRestaurantDetails = async (latitude, longitude) => {
+    const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=24140&type=restaurant&opennow=true&key=${GOOGLE_MAPS_API_KEY}`);
     
     if (googleResponse.data.status !== "OK") {
         throw new Error(`Failed to fetch places from Google: ${googleResponse.data.error_message}`);

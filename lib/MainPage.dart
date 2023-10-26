@@ -5,7 +5,6 @@ import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -42,52 +41,47 @@ class _MainPageState extends State<MainPage> {
   }
 
 
-  Future<List<PlacesSearchResult>> fetchNearbyRestaurantsFromServer(LatLng location) async {
+  Future<List<Restaurant>> fetchNearbyRestaurantsFromServer(LatLng location) async {
     final response = await http.get(
       Uri.parse('http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}'),
     );
     if (response.statusCode == 200) {
-      // Assuming server returns a list of restaurant data
-      var jsonResponse = jsonDecode(response.body);
+      // Parse the JSON based on your provided structure
+      List<dynamic> jsonResponse = jsonDecode(response.body);
       print("Success pulling from server");
-      return List<PlacesSearchResult>.from(jsonResponse.map((i) => PlacesSearchResult.fromJson(i)));
+
+      return jsonResponse.map((restaurant) => Restaurant.fromJson(restaurant)).toList();
     } else {
       print("Failed to fetch restaurants from server");
       return [];
     }
   }
 
-  void _setRestaurantMarkers(List<PlacesSearchResult> fetchedRestaurants) {
+
+  void _setRestaurantMarkers(List<Restaurant> fetchedRestaurants) {
     Set<Marker> tempMarkers = {};
-    List<Restaurant> tempRestaurants = [];
 
     for (var restaurant in fetchedRestaurants) {
       final marker = Marker(
-        markerId: MarkerId(restaurant.placeId),
-        position: LatLng(restaurant.geometry!.location.lat, restaurant.geometry!.location.lng),
-        infoWindow: InfoWindow(title: restaurant.name, snippet: restaurant.vicinity),
+        markerId: MarkerId(restaurant.name), // Change this if you have unique IDs
+        position: restaurant.location,
+        infoWindow: InfoWindow(title: restaurant.name, snippet: restaurant.address),
+        // You can also add other properties like icon, etc.
       );
 
       tempMarkers.add(marker);
-      tempRestaurants.add(
-        Restaurant(
-          restaurant.name,
-          restaurant.vicinity!,
-          "Cuisine type not provided by API",  // Modify as per API data, if available.
-          LatLng(restaurant.geometry!.location.lat, restaurant.geometry!.location.lng),
-        ),
-      );
     }
 
     setState(() {
       _restaurantMarkers = tempMarkers;
-      restaurants = tempRestaurants;
+      restaurants = fetchedRestaurants;  // Update the restaurants list
     });
-    if (restaurants.isNotEmpty) {
-      LatLngBounds bounds = _boundsOfRestaurants(restaurants);
+    if (fetchedRestaurants.isNotEmpty) {
+      LatLngBounds bounds = _boundsOfRestaurants(fetchedRestaurants);
       _updateCameraBounds(bounds);
     }
   }
+
 
   Future<Position?> _determinePosition() async {
     bool serviceEnabled;
@@ -141,12 +135,13 @@ class _MainPageState extends State<MainPage> {
     double maxLat = restaurants[0].location.latitude;
     double minLng = restaurants[0].location.longitude;
     double maxLng = restaurants[0].location.longitude;
+    double padding = 0.01;  // You can adjust the padding as needed
 
     for (var restaurant in restaurants) {
-      if (restaurant.location.latitude < minLat) minLat = restaurant.location.latitude;
-      if (restaurant.location.latitude > maxLat) maxLat = restaurant.location.latitude;
-      if (restaurant.location.longitude < minLng) minLng = restaurant.location.longitude;
-      if (restaurant.location.longitude > maxLng) maxLng = restaurant.location.longitude;
+      if (restaurant.location.latitude - padding < minLat) minLat = restaurant.location.latitude - padding;
+      if (restaurant.location.latitude + padding > maxLat) maxLat = restaurant.location.latitude + padding;
+      if (restaurant.location.longitude - padding < minLng) minLng = restaurant.location.longitude - padding;
+      if (restaurant.location.longitude + padding > maxLng) maxLng = restaurant.location.longitude + padding;
     }
 
     return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
@@ -154,8 +149,11 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _updateCameraBounds(LatLngBounds bounds) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    CameraUpdate zoomIn = CameraUpdate.zoomIn();  // A CameraUpdate to zoom in
+    mapController?.animateCamera(zoomIn);  // Apply the zoom in
+    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));  // Then apply the new bounds
   }
+
 
   // The build method describes the part of the UI represented by the widget.
   @override
@@ -242,9 +240,40 @@ class Restaurant {
   final String address;
   final String cuisine;
   final LatLng location;
+  final String imageUrl;
+  final double rating;
+  final int priceLevel;
+  final String icon;
+  final bool? openingHours; // This can be nullable if not always available
 
-  Restaurant(this.name, this.address, this.cuisine, this.location);
+  Restaurant({
+    required this.name,
+    required this.address,
+    required this.cuisine,
+    required this.location,
+    required this.imageUrl,
+    required this.rating,
+    required this.priceLevel,
+    required this.icon,
+    this.openingHours,
+  });
+
+  // Convert JSON to Restaurant object
+  factory Restaurant.fromJson(Map<String, dynamic> json) {
+    return Restaurant(
+      name: json['business_name'],
+      address: json['address'],
+      cuisine: json['categories_of_cuisine'],
+      location: LatLng(json['lat'], json['lng']),
+      imageUrl: json['image_url'],
+      rating: json['rating'].toDouble(),
+      priceLevel: json['price_level'] ?? 0,
+      icon: json['icon'],
+      openingHours: json['opening_hours'] as bool?,
+    );
+  }
 }
+
 
 // Stateless widget to represent a single restaurant item.
 class RestaurantItem extends StatelessWidget {
