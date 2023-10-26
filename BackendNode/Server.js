@@ -12,17 +12,19 @@ const connection = mysql.createConnection({
     port: PORT
 });
 */
-const googleMapsRoutes = require('./routes/GoogleMapsLogic');
-const yelpRoutes = require('./routes/YelpLogic');
+const googleMapsRoutes = require('./routes/Google/GoogleMapsLogic');
+const googleMapsRoutesTest = require('./routes/Google/TEST_GoogleMapsLogic');
 
 app.use('/googleAPI', googleMapsRoutes);
-app.use('/yelpAPI', yelpRoutes);
+
+app.use('/TESTgoogleAPI', googleMapsRoutesTest);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
-app.listen(3000, '0.0.0.0', function() {
-    console.log('Listening on port 3000...');
-  });
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Server started on http://0.0.0.0:3000');
+});
+
   
