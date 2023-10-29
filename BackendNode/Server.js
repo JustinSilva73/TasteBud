@@ -1,17 +1,23 @@
 const express = require('express');
+const mysql = require('mysql');
 const app = express();
 const PORT = 3000;
 const cors = require('cors');
 app.use(cors()); 
-/*
+
 const connection = mysql.createConnection({
-    host: '',
-    user: '',
-    password: '',
+    host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
+    user: 'admin',
+    password: 'tastebudAWS',
     database: '', 
-    port: PORT
+    port: 3306
 });
-*/
+
+connection.connect(function(err) {
+    if (err) throw err
+    console.log('You are now connected...')
+  })
+
 const googleMapsRoutes = require('./routes/Google/GoogleMapsLogic');
 const googleMapsRoutesTest = require('./routes/Google/TEST_GoogleMapsLogic');
 
