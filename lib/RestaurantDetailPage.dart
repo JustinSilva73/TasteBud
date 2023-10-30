@@ -5,6 +5,20 @@ class RestaurantDetailPage extends StatelessWidget {
   final Restaurant restaurant;
 
   RestaurantDetailPage({required this.restaurant});
+  String priceLevelToString(int priceLevel) {
+    switch (priceLevel) {
+      case 1:
+        return '\$';
+      case 2:
+        return '\$\$';
+      case 3:
+        return '\$\$\$';
+      case 4:
+        return '\$\$\$\$';
+      default:
+        throw ArgumentError('Invalid price level: $priceLevel');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +33,8 @@ class RestaurantDetailPage extends StatelessWidget {
             Container(
               width: double.infinity,
               height: 200, // You can adjust the height as needed
-              child: Image.asset(
-                'assets/restaurant_image.jpg', // Replace with the path to your restaurant image
+              child: Image.network(
+                restaurant.imageUrl, // Directly use the imageUrl which is an online link
                 fit: BoxFit.cover,
               ),
             ),
@@ -54,7 +68,7 @@ class RestaurantDetailPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8.0),
                   Text(
-                    '\$ - \$\$\$', // Replace with the actual price range
+                    priceLevelToString(restaurant.priceLevel),
                     style: TextStyle(
                       fontSize: 16.0,
                     ),
@@ -69,7 +83,7 @@ class RestaurantDetailPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8.0),
                   Text(
-                    '5 miles', // Replace with the actual distance
+                    restaurant.distance?.toString() ?? 'Unknown distance', // Replace with the actual distance
                     style: TextStyle(
                       fontSize: 16.0,
                     ),
@@ -101,7 +115,7 @@ class RestaurantDetailPage extends StatelessWidget {
                   SizedBox(height: 8.0),
                   TextField(
                     readOnly: true, // Prevents user input
-                    controller: TextEditingController(text: 'Your cuisine information here'),
+                    controller: TextEditingController(text: restaurant.cuisine),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                     ),

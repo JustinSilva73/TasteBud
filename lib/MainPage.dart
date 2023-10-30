@@ -50,12 +50,28 @@ class _MainPageState extends State<MainPage> {
       List<dynamic> jsonResponse = jsonDecode(response.body);
       print("Success pulling from server");
 
-      return jsonResponse.map((restaurant) => Restaurant.fromJson(restaurant)).toList();
+      // Convert JSON to a list of Restaurant objects
+      List<Restaurant> fetchedRestaurants = jsonResponse
+          .map((restaurant) => Restaurant.fromJson(restaurant))
+          .toList();
+
+      // Calculate and set the distance for each restaurant
+      for (Restaurant restaurant in fetchedRestaurants) {
+        double distanceInMeters = Geolocator.distanceBetween(
+          location.latitude, location.longitude,
+          restaurant.location.latitude, restaurant.location.longitude,
+        );
+        double distanceInMiles = distanceInMeters / 1609.34;  // Convert to miles
+        restaurant.distance = double.parse(distanceInMiles.toStringAsFixed(1));
+      }
+
+      return fetchedRestaurants;
     } else {
       print("Failed to fetch restaurants from server");
       return [];
     }
   }
+
 
 
   void _setRestaurantMarkers(List<Restaurant> fetchedRestaurants) {
@@ -244,7 +260,9 @@ class Restaurant {
   final double rating;
   final int priceLevel;
   final String icon;
-  final bool? openingHours; // This can be nullable if not always available
+  final bool? openingHours;
+  double? distance;
+  double? totalPoints;
 
   Restaurant({
     required this.name,
@@ -256,6 +274,8 @@ class Restaurant {
     required this.priceLevel,
     required this.icon,
     this.openingHours,
+    this.distance,
+    this.totalPoints,
   });
 
   // Convert JSON to Restaurant object
@@ -270,6 +290,8 @@ class Restaurant {
       priceLevel: json['price_level'] ?? 0,
       icon: json['icon'],
       openingHours: json['opening_hours'] as bool?,
+      distance: null,
+      totalPoints: null,
     );
   }
 }
@@ -292,7 +314,7 @@ class RestaurantItem extends StatelessWidget {
       ),
       child: ListTile(
         title: Text(restaurant.name),  // Display the restaurant's name.
-        subtitle: Text(restaurant.address),  // Display the restaurant's address.
+        subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(

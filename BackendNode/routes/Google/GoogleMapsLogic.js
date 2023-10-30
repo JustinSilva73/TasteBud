@@ -3,6 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 
 const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
+const setPriority = require('../Priority/DeterminePrio');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc';
 
@@ -47,18 +48,24 @@ router.get('/restaurants', async (req, res) => {
                 opening_hours: place.opening_hours ? place.opening_hours.open_now : null
             };
             
-            let yelpDetails = {
-                imageUrl: getRandomItem(defaultYelpDetails.imageUrls),  // Setting to random by default
-                categories: defaultYelpDetails.categories // Setting default categories
-            };
+            let yelpDetails
 
             try {
-                //yelpDetails = await getYelpRestaurantDetails(place.vicinity);
+                // Uncommenting the next line will make the following error throw execute.
+                // const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
                 
-                // Assign a random category and image URL
-                basicDetails.categories_of_cuisine = getRandomItem(yelpDetails.categories);
-                basicDetails.image_url = yelpDetails.imageUrl;
-
+                if (!yelpDetails) {
+                    throw new Error("Yelp details not fetched.");
+                }
+            
+                if(yelpDetails.categories) {
+                    basicDetails.categories_of_cuisine = yelpDetails.categories;
+                }
+            
+                if(yelpDetails.imageUrl) {
+                    basicDetails.image_url = yelpDetails.imageUrl;
+                }
+            
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);
                 basicDetails.categories_of_cuisine = getRandomItem(defaultYelpDetails.categories);
@@ -67,7 +74,6 @@ router.get('/restaurants', async (req, res) => {
 
             filteredPlaces.push(basicDetails);
         } 
-
         res.json(filteredPlaces); 
 
     } catch (error) {
