@@ -4,6 +4,7 @@ const app = express();
 const PORT = 3000;
 const cors = require('cors');
 app.use(cors()); 
+app.use(express.json());
 
 const connection = mysql.createConnection({
     host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
@@ -20,10 +21,13 @@ connection.connect(function(err) {
 
 const googleMapsRoutes = require('./routes/Google/GoogleMapsLogic');
 const googleMapsRoutesTest = require('./routes/Google/TEST_GoogleMapsLogic');
+const prioRoute = require('./routes/Priority/DeterminePrio');
 
 app.use('/googleAPI', googleMapsRoutes);
 
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
+
+app.use('/priority',prioRoute);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });

@@ -6,7 +6,7 @@ const YELP_API_KEY = 'lGDedEU4j67hTkD58rj9kgeL1uKLRtqtX-LZkVZF3aBTJmNVMZfGUasXj7
 const getYelpRestaurantDetails = async (address) => {
     const options = {
         method: 'GET',
-        url: `https://api.yelp.com/v3/businesses/search?location=${address}&term=restaurant&categories=&open_now=true&sort_by=distance&limit=1`,
+        url: `https://api.yelp.com/v3/businesses/search?location=${encodeURIComponent(address)}&term=restaurant&categories=&open_now=true&sort_by=distance&limit=1`,
         headers: {
             accept: 'application/json',
             Authorization: `Bearer ${YELP_API_KEY}`
@@ -30,6 +30,11 @@ const getYelpRestaurantDetails = async (address) => {
             categories: response.data.businesses[0].categories.map(category => category.title)
         };
     } catch (error) {
+        if (error.response) {
+            console.error('Yelp API Error Response:', error.response.data);
+        } else {
+            console.error('Error fetching from Yelp API:', error.message);
+        }
         // Additionally, if you want to inspect error response headers
         if (error.response && error.response.headers) {
             const rateLimit = error.response.headers["ratelimit-limit"];
