@@ -28,19 +28,42 @@ const cuisineValues = {
     10: 40, 
     15: 10  
 };
+//const setPriority = async (restaurants, email) => {
+router.post('/restaurantPrio', async (req, res) => {
+    try {
+        const restaurants = req.body.restaurants;
+        const email = req.body.email;
 
-const setPriority = async (restaurants, email) => {
-    //Find email prios
-    const updatedRestaurants = restaurants.map(restaurant => {
-        const totalPoints = computePriority(restaurant);
-        return { ...restaurant, totalPoints };
-    });
-    return updatedRestaurants;
-}
+        if (!restaurants || !email) {
+            return res.status(400).json({ error: 'Restaurants and email are required' });
+        }
+
+        const updatedRestaurants = restaurants.map(restaurant => {
+            const totalPoints = computePriority(restaurant);
+            return { ...restaurant, totalPoints };
+        });
+        console.log("Before sorting:");
+        restaurants.forEach(restaurant => {
+            console.log(restaurant.business_name, "-", restaurant.totalPoints);
+        });
+        
+        updatedRestaurants.sort((a, b) => b.totalPoints - a.totalPoints);
+        console.log("After sorting:");
+        updatedRestaurants.forEach(restaurant => {
+            console.log(restaurant.business_name, "-", restaurant.totalPoints);
+        });
+
+        console.log("Successful pull from prio");
+        res.json(updatedRestaurants);
+    } catch (error) {
+        console.error("Error in /restaurantPrio:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+    
 
   
   const computePriority = (restaurant) => {
-    console.log("Check - Input:", restaurant);
     let cuisinePriority = cuisineValues[restaurant.categories_of_cuisine] ?? 0;
     let ratingPriority = (restaurant.rating * 20);  
 
@@ -67,4 +90,4 @@ const setPriority = async (restaurants, email) => {
     return cuisinePriority + ratingPriority + distancePriority + pricePriority;
 }
 
-module.exports = setPriority;
+module.exports = router;

@@ -29,9 +29,17 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _loadStoredEmail();
-    positionFuture = _determinePosition(); // cache the future
+    _initializeData();
   }
+
+  _initializeData() async {
+    await _loadPositionFromStorage();
+    positionFuture = _determinePosition();
+    _loadStoredEmail();
+    _loadStoredRestaurants();
+  }
+
+
 
   _loadStoredEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -39,40 +47,88 @@ class _MainPageState extends State<MainPage> {
       storedEmail = prefs.getString('storedEmail');
     });
   }
+  _loadStoredRestaurants() async {
+    List<Restaurant>? fetchedRestaurants = await fetchStoredRestaurants();
+    if (fetchedRestaurants != null && fetchedRestaurants.isNotEmpty) {
+      setState(() {
+        restaurants = fetchedRestaurants;
+      });
 
+      // Run fetchRestaurantPrio right after setting the restaurants from local storage.
+      if(storedEmail != null) {
+        List<Restaurant> priorityRestaurants = await fetchRestaurantPrio(restaurants, storedEmail!);
+        if (priorityRestaurants.isNotEmpty) {
+          setState(() {
+            restaurants = priorityRestaurants;  // Update the restaurants list with priority restaurants from the server
+          });
+        }
+      }
 
-  Future<List<Restaurant>> fetchNearbyRestaurantsFromServer(LatLng location) async {
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}'),
+      _setRestaurantMarkers(restaurants);  // Set markers based on the potentially updated restaurants list.
+    }
+  }
+
+  Future<List<Restaurant>?> fetchStoredRestaurants() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('restaurants');
+
+    if (jsonString != null) {
+      List<dynamic> jsonList = jsonDecode(jsonString);
+      List<Restaurant> fetchedRestaurants = jsonList.map((json) => Restaurant.fromJson(json)).toList();
+      return fetchedRestaurants;
+    }
+    return null;
+  }
+  Future<void> _loadPositionFromStorage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double? storedLatitude = prefs.getDouble('latitude');
+    double? storedLongitude = prefs.getDouble('longitude');
+
+    if (storedLatitude != null && storedLongitude != null) {
+      setState(() {
+        currentPosition = Position(
+            latitude: storedLatitude,
+            longitude: storedLongitude,
+            accuracy: 0.0,
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            timestamp: DateTime
+                .now() // Providing the current time as a dummy value
+        );
+      });
+    }
+  }
+  Future<List<Restaurant>> fetchRestaurantPrio(List<Restaurant> restaurants, String email) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:3000/priority/restaurantPrio'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'restaurants': restaurants.map((r) => r.toJson()).toList(), // Convert list of Restaurant objects to list of JSON
+        'email': email,
+      }),
     );
+
     if (response.statusCode == 200) {
-      // Parse the JSON based on your provided structure
       List<dynamic> jsonResponse = jsonDecode(response.body);
-      print("Success pulling from server");
+      print("Success pulling priority restaurants from server");
 
       // Convert JSON to a list of Restaurant objects
       List<Restaurant> fetchedRestaurants = jsonResponse
           .map((restaurant) => Restaurant.fromJson(restaurant))
           .toList();
 
-      // Calculate and set the distance for each restaurant
-      for (Restaurant restaurant in fetchedRestaurants) {
-        double distanceInMeters = Geolocator.distanceBetween(
-          location.latitude, location.longitude,
-          restaurant.location.latitude, restaurant.location.longitude,
-        );
-        double distanceInMiles = distanceInMeters / 1609.34;  // Convert to miles
-        restaurant.distance = double.parse(distanceInMiles.toStringAsFixed(1));
-      }
-
       return fetchedRestaurants;
     } else {
-      print("Failed to fetch restaurants from server");
+      print("Failed to fetch priority restaurants from server");
       return [];
     }
   }
-
-
 
   void _setRestaurantMarkers(List<Restaurant> fetchedRestaurants) {
     Set<Marker> tempMarkers = {};
@@ -100,68 +156,54 @@ class _MainPageState extends State<MainPage> {
 
 
   Future<Position?> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      print("Location services are disabled."); // Logging
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) {
-      print("Location permissions are permanently denied."); // Logging
-      return Future.error('Location permissions are permanently denied. We cannot request permissions.');
-    }
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.whileInUse &&
-          permission != LocationPermission.always) {
-        print("Location permissions are denied: $permission"); // Logging
-        return Future.error('Location permissions are denied (actual value: $permission).');
-      }
-    }
-
-    // If permissions are granted, get the current position
-    currentPosition = await Geolocator.getCurrentPosition();
-    print("Current Position: $currentPosition");  // Logging
-
-    // Fetch nearby restaurants and set markers
-    final fetchedRestaurants = await fetchNearbyRestaurantsFromServer(LatLng(currentPosition!.latitude, currentPosition!.longitude));
-    _setRestaurantMarkers(fetchedRestaurants);
 
     // Add a circle overlay for the current position
-    _circles.add(
-      Circle(
-        circleId: const CircleId("currentLocationCircle"),
-        center: LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        radius: 400,  // Adjust the radius as needed.
-        fillColor: Colors.blue.withOpacity(0.5),  // Color for the circle fill.
-        strokeWidth: 2,  // Width of the circle border.
-        strokeColor: Colors.blue,  // Color of the circle border.
-      ),
-    );
-
+    if (currentPosition != null) {
+      _circles.add(
+        Circle(
+          circleId: const CircleId("currentLocationCircle"),
+          center: LatLng(currentPosition!.latitude, currentPosition!.longitude),
+          radius: 400,
+          fillColor: Colors.blue.withOpacity(0.5),
+          strokeWidth: 2,
+          strokeColor: Colors.blue,
+        ),
+      );
+    }
+    print("Current Position: $currentPosition");
     return currentPosition; // Return the position here
   }
+
   LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants) {
     double minLat = restaurants[0].location.latitude;
     double maxLat = restaurants[0].location.latitude;
     double minLng = restaurants[0].location.longitude;
     double maxLng = restaurants[0].location.longitude;
-    double padding = 0.01;  // You can adjust the padding as needed
 
     for (var restaurant in restaurants) {
-      if (restaurant.location.latitude - padding < minLat) minLat = restaurant.location.latitude - padding;
-      if (restaurant.location.latitude + padding > maxLat) maxLat = restaurant.location.latitude + padding;
-      if (restaurant.location.longitude - padding < minLng) minLng = restaurant.location.longitude - padding;
-      if (restaurant.location.longitude + padding > maxLng) maxLng = restaurant.location.longitude + padding;
+      if (restaurant.location.latitude < minLat) minLat = restaurant.location.latitude;
+      if (restaurant.location.latitude > maxLat) maxLat = restaurant.location.latitude;
+      if (restaurant.location.longitude < minLng) minLng = restaurant.location.longitude;
+      if (restaurant.location.longitude > maxLng) maxLng = restaurant.location.longitude;
     }
 
-    return LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng));
+    // Calculate the range of latitudes and longitudes
+    double latRange = maxLat - minLat;
+    double lngRange = maxLng - minLng;
+
+    // Define a padding percentage
+    double paddingPercentage = 0.05; // 5% for example
+
+    // Calculate the actual padding values based on the percentage
+    double latPadding = latRange * paddingPercentage;
+    double lngPadding = lngRange * paddingPercentage;
+
+    return LatLngBounds(
+        southwest: LatLng(minLat - latPadding, minLng - lngPadding),
+        northeast: LatLng(maxLat + latPadding, maxLng + lngPadding)
+    );
   }
+
 
   Future<void> _updateCameraBounds(LatLngBounds bounds) async {
     await Future.delayed(const Duration(milliseconds: 300));
@@ -290,9 +332,24 @@ class Restaurant {
       priceLevel: json['price_level'] ?? 0,
       icon: json['icon'],
       openingHours: json['opening_hours'] as bool?,
-      distance: null,
+      distance: json['distance']?.toDouble(),
       totalPoints: null,
     );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      'business_name': name,
+      'address': address,
+      'categories_of_cuisine': cuisine,
+      'lat': location.latitude,
+      'lng': location.longitude,
+      'image_url': imageUrl,
+      'rating': rating,
+      'price_level': priceLevel,
+      'icon': icon,
+      'opening_hours': openingHours,
+      'distance': distance,
+      'totalPoints': totalPoints,    };
   }
 }
 

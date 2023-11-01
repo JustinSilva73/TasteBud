@@ -3,13 +3,11 @@ const axios = require('axios');
 const router = express.Router();
 
 const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
-const setPriority = require('../Priority/DeterminePrio');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc';
 
 router.get('/restaurants', async (req, res) => {
     const { latitude, longitude } = req.query; 
-
     const defaultYelpDetails = {
         imageUrls: [
             "https://plus.unsplash.com/premium_photo-1679435445402-fd6940d68535?auto=format&fit=crop&q=80&w=1887&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -37,6 +35,7 @@ router.get('/restaurants', async (req, res) => {
         const filteredPlaces = [];
 
         for (let place of places) {
+            console.log("Checking vicinity value:", place.vicinity);
             const basicDetails = {
                 business_name: place.name,
                 address: place.vicinity,
@@ -48,34 +47,37 @@ router.get('/restaurants', async (req, res) => {
                 opening_hours: place.opening_hours ? place.opening_hours.open_now : null
             };
             
-            let yelpDetails
 
             try {
-                // Uncommenting the next line will make the following error throw execute.
-                // const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
-                
-                if (!yelpDetails) {
+                //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
+                //const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
+                console.log("YelpDetails: ", yelpDetails);
+            
+                if (yelpDetails) {
+                    if (yelpDetails.categories && yelpDetails.categories.length > 0) {
+                        basicDetails.categories_of_cuisine = yelpDetails.categories[0];
+                    }
+                    
+            
+                    if (yelpDetails.imageUrl) {
+                        basicDetails.image_url = yelpDetails.imageUrl;
+                    }
+                } else {
                     throw new Error("Yelp details not fetched.");
-                }
-            
-                if(yelpDetails.categories) {
-                    basicDetails.categories_of_cuisine = yelpDetails.categories;
-                }
-            
-                if(yelpDetails.imageUrl) {
-                    basicDetails.image_url = yelpDetails.imageUrl;
                 }
             
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);
                 basicDetails.categories_of_cuisine = getRandomItem(defaultYelpDetails.categories);
                 basicDetails.image_url = getRandomItem(defaultYelpDetails.imageUrls);
-            }
+            }            
 
             filteredPlaces.push(basicDetails);
         } 
         res.json(filteredPlaces); 
-
+        filteredPlaces.forEach(place => {
+            console.log("After setting from Yelp: ", place.image_url);
+        });
     } catch (error) {
         console.error('Error fetching from Google Maps API:', error);
         res.status(500).json({ error: 'Failed to fetch data from Google Maps API.' });
