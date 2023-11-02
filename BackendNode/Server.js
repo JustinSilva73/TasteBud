@@ -14,9 +14,11 @@ const connection = mysql.createConnection({
 */
 const googleMapsRoutes = require('./routes/GoogleMapsLogic');
 const yelpRoutes = require('./routes/YelpLogic');
+const databaseRoutes = require('./routes/DatabaseLogic');s
 
 app.use('/googleAPI', googleMapsRoutes);
 app.use('/yelpAPI', yelpRoutes);
+app.use('/databaseAPI', databaseRoutes);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
