@@ -1,8 +1,8 @@
 const express = require('express');
-const app = express();
+const router = express.Router();
 const port = 3306; // Default port for MySQL traffic
 const bodyParser = require('body-parser');
-const mysql = require('mysql'); // Use the appropriate database library (e.g., 'mysql', 'mongodb', etc.)
+const mysql = require('mysql');
 
 // Create a database connection
 const db = mysql.createConnection({
@@ -20,10 +20,10 @@ db.connect((err) => {
   }
 });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
 // Define API endpoints for interacting with the database
-app.get('/getData', (req, res) => {
+router.get('/getData', (req, res) => {
   // Test query for grabbing user data
   db.query('SELECT * FROM Restaurants', (error, results) => {
     if (error) {
@@ -47,7 +47,6 @@ const insertData = (data, table) => {
     }
   });
 };
-
-app.listen(port, () => {
+router.listen(port) => {
   console.log('Server is running on port ${port}');
 });
