@@ -8,7 +8,7 @@ const mysql = require('mysql'); // Use the appropriate database library (e.g., '
 const db = mysql.createConnection({
   host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
   user: 'admin',
-  password: 'restaurantInfo',
+  password: 'ShowcaseTwenty23',
   database: 'tastebud',
 });
 
@@ -36,6 +36,17 @@ app.get('/getData', (req, res) => {
 });
 
 // Add more routes for database operations here
+
+// Insert data into the database
+const insertData = (data, table) => {
+  db.query('INSERT INTO ${table} SET ?', data, (error, results) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log('Data inserted:', results);
+    }
+  });
+};
 
 app.listen(port, () => {
   console.log('Server is running on port ${port}');
