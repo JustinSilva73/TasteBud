@@ -370,6 +370,9 @@ class RestaurantItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(5.0),
       ),
       child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(restaurant.icon), // Assuming 'icon' is a URL to the restaurant's icon image.
+        ),
         title: Text(restaurant.name),  // Display the restaurant's name.
         subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
         onTap: () {
@@ -379,7 +382,6 @@ class RestaurantItem extends StatelessWidget {
             ),
           );
         },
-
       ),
     );
   }
