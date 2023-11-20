@@ -51,7 +51,7 @@ router.get('/restaurants', async (req, res) => {
             let yelpDetails;
             try {
                 // UNCOMMENT OUT TO STOP YELP
-                yelpDetails = await getYelpRestaurantDetails(place.vicinity);
+                //yelpDetails = await getYelpRestaurantDetails(place.vicinity);
                 console.log("YelpDetails: ", yelpDetails);
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);

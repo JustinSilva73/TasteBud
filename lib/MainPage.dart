@@ -260,7 +260,7 @@ class _MainPageState extends State<MainPage> {
                       // Setting the initial position of the map to the user's current location.
                       initialCameraPosition: CameraPosition(
                         target: LatLng(position.latitude, position.longitude),
-                        zoom: 14.4746,  // Initial zoom level. Adjust this based on preference.
+                        zoom: 10,  // Initial zoom level. Adjust this based on preference.
                       ),
                       markers: _restaurantMarkers,  // Display all the restaurant markers on the map.
                       circles: _circles,  // Display the circle around the user's current location.
