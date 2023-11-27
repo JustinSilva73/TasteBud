@@ -1,5 +1,5 @@
 const express = require('express');
-const app = express();
+const router = express.Router();
 const port = 3306; // Default port for MySQL traffic
 const bodyParser = require('body-parser');
 const mysql = require('mysql'); // Use the appropriate database library (e.g., 'mysql', 'mongodb', etc.)
@@ -8,7 +8,7 @@ const mysql = require('mysql'); // Use the appropriate database library (e.g., '
 const db = mysql.createConnection({
   host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
   user: 'admin',
-  password: 'restaurantInfo',
+  password: 'ShowcaseTwenty23',
   database: 'tastebud',
 });
 
@@ -20,10 +20,10 @@ db.connect((err) => {
   }
 });
 
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
 // Define API endpoints for interacting with the database
-app.get('/getData', (req, res) => {
+router.get('/getData', (req, res) => {
   // Test query for grabbing user data
   db.query('SELECT * FROM Restaurants', (error, results) => {
     if (error) {
