@@ -50,7 +50,7 @@ router.get('/restaurants', async (req, res) => {
 
             try {
                 //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
-                //const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
+                // const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
                 console.log("YelpDetails: ", yelpDetails);
             
                 if (yelpDetails) {

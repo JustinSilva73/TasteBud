@@ -167,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
       print("Server responded with status code: ${response.statusCode}. Response: ${response.body}");
 
       print("Failed to fetch restaurants from server");
-      return [];
+      return []; 
     }
   }
 
@@ -234,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 await _saveEmailToStorage(email);
                 print('Stored email: $email');
-
+                
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => MainPage()), // Assumes you have a CreateAccountPage widget
