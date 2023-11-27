@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:tastebud/MainPage.dart';
-import 'package:tastebud/SkipSurveyPage.dart';
 
 //Question Class meant for a list in order to hold all quesitons and answers
 class Question {
