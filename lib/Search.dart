@@ -81,7 +81,7 @@ class _SearchPageState extends State<SearchPage> {
                 child: Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
-                    side: BorderSide(color: Colors.black, width: 1.0), // Add this line
+                    side: const BorderSide(color: Colors.black, width: 1.0), // Add this line
                   ),
 
                   child: Column(

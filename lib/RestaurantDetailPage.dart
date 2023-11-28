@@ -53,8 +53,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       label: Text(text),
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        primary: Colors.blue, // Button color
-        onPrimary: Colors.white, // Text color
+        backgroundColor: Color(0xFFA30000), // Updated property for button color
+        foregroundColor: Colors.white, // Updated property for text color
       ),
     );
   }

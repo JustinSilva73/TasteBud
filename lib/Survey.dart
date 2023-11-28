@@ -26,7 +26,7 @@ List<Question> surveyQuestions = [
   ),
   Question(
     questionText: "4 choice question?",
-    answers: ["Monday", "Tuesday", "Wednesday", "Thursday"],
+    answers: ["What", "Cuisine", "You", "Like"],
   ),
 ];
 
