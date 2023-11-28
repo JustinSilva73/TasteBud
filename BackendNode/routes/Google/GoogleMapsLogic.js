@@ -48,29 +48,23 @@ router.get('/restaurants', async (req, res) => {
             };
             
 
+            let yelpDetails;
             try {
                 //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
                 // const yelpDetails = await getYelpRestaurantDetails(place.vicinity);
                 console.log("YelpDetails: ", yelpDetails);
-            
-                if (yelpDetails) {
-                    if (yelpDetails.categories && yelpDetails.categories.length > 0) {
-                        basicDetails.categories_of_cuisine = yelpDetails.categories[0];
-                    }
-                    
-            
-                    if (yelpDetails.imageUrl) {
-                        basicDetails.image_url = yelpDetails.imageUrl;
-                    }
-                } else {
-                    throw new Error("Yelp details not fetched.");
-                }
-            
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);
-                basicDetails.categories_of_cuisine = getRandomItem(defaultYelpDetails.categories);
-                basicDetails.image_url = getRandomItem(defaultYelpDetails.imageUrls);
-            }            
+            }
+
+            // Assign values based on yelpDetails or use random values if yelpDetails is undefined
+            basicDetails.categories_of_cuisine = yelpDetails && yelpDetails.categories && yelpDetails.categories.length > 0
+                ? yelpDetails.categories[0]
+                : getRandomItem(defaultYelpDetails.categories);
+
+            basicDetails.image_url = yelpDetails && yelpDetails.imageUrl
+                ? yelpDetails.imageUrl
+                : getRandomItem(defaultYelpDetails.imageUrls);
 
             filteredPlaces.push(basicDetails);
         } 
