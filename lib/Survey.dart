@@ -67,7 +67,7 @@ class _SurveyPageState extends State<SurveyPage> {
               Colors.white,
               Colors.black.withOpacity(0.1),  // Darker color for the shadow at the edges
             ],
-            stops: [
+            stops: const [
               0.0,  // Start of the gradient
               0.05, // Start transitioning to the next color quickly
               0.95, // Start transitioning back to darker color near the end
