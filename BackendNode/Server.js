@@ -1,29 +1,25 @@
 const express = require('express');
-//const mysql = require('mysql');
 const app = express();
 const PORT = 3006;
 const cors = require('cors');
+const cookieSession = require("cookie-session");
+
 app.use(cors()); 
 app.use(express.json());
-/*
-const connection = mysql.createConnection({
-    host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
-    user: 'admin',
-    password: 'tastebudAWS',
-    database: '', 
-    port: PORT
-});
+app.use(express.urlencoded({ extended: true }));
 
-connection.connect(function(err) {
-    if (err) throw err
-    console.log('You are now connected...')
-  })
-*/
+app.use(
+    cookieSession({
+      name: "bezkoder-session",
+      keys: ["COOKIE_SECRET"], 
+      httpOnly: true,
+    })
+);
+
 const googleMapsRoutes = require('./routes/Google/GoogleMapsLogic');
 const googleMapsRoutesTest = require('./routes/Google/TEST_GoogleMapsLogic');
 const prioRoute = require('./routes/Priority/DeterminePrio');
-const loginRoute = require('./routes/Login/login');
-const registrationRoute = require('./routes/Registration/registration');
+const auth = require('./routes/Auth/Auth');
 
 app.use('/googleAPI', googleMapsRoutes);
 
@@ -31,9 +27,7 @@ app.use('/TESTgoogleAPI', googleMapsRoutesTest);
 
 app.use('/priority',prioRoute);
 
-app.use('/login', loginRoute);
-
-app.use('/registration', registrationRoute);
+app.use('/auth',auth);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
