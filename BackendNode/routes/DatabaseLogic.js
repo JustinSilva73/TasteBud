@@ -5,26 +5,42 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql'); // Use the appropriate database library (e.g., 'mysql', 'mongodb', etc.)
 
 // Create a database connection
-const db = mysql.createConnection({
+const dbConfig = {
   host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
   user: 'admin',
   password: 'ShowcaseTwenty23',
   database: 'tastebud',
-});
+};
 
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed: ' + err.message);
-  } else {
-    console.log('Connected to the database');
+function openConnection() {
+  const connection = mysql.createConnection(dbConfig);
+  connection.connect(err => {
+    if (err) {
+      console.error('Error connecting to the database:', err);
+      return null;
+    }
+    console.log('Database connection established');
+  });
+  return connection;
+}
+
+function closeConnection(connection) {
+  if (connection) {
+    connection.end(err => {
+      if (err) {
+        console.error('Error closing the database connection:', err);
+      } else {
+        console.log('Database connection closed');
+      }
+    });
   }
-});
+}
 
 router.use(bodyParser.json());
 
 // Define API endpoints for interacting with the database
 router.get('/getData', (req, res) => {
-  // Test query for grabbing user data
+  db = openConnection();
   db.query('SELECT * FROM Restaurants', (error, results) => {
     if (error) {
       console.error('Error executing query: ' + error);
@@ -33,10 +49,7 @@ router.get('/getData', (req, res) => {
       res.json(results);
     }
   });
+  closeConnection(db);
 });
 
-// Add more routes for database operations here
-
-app.listen(port, () => {
-  console.log('Server is running on port ${port}');
-});
+module.exports = { openConnection, closeConnection };

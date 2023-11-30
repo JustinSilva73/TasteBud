@@ -4,21 +4,7 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql'); // Use the appropriate database library (e.g., 'mysql', 'mongodb', etc.)
 
 // Create a database connection
-const db = mysql.createConnection({
-  host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com', 
-  user: 'admin',
-  password: 'ShowcaseTwenty23',
-  database: 'tastebud',
-  port:3306
-});
 
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed: ' + err.message);
-  } else {
-    console.log('Connected to the database');
-  }
-});
 
 
 
