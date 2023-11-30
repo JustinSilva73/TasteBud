@@ -14,7 +14,7 @@ final ThemeData themeData = ThemeData(
     buttonColor: primaryColor,
     textTheme: ButtonTextTheme.primary,
   ),
-  inputDecorationTheme: InputDecorationTheme(
+  inputDecorationTheme: const InputDecorationTheme(
     labelStyle: TextStyle(
       color: Colors.grey, // Color for the label when not focused
     ),
@@ -75,7 +75,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       String password) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/registration/pushAccount'),
+        Uri.parse('http://10.0.2.2:3000/auth/pushAccount'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'username': userName,
@@ -99,7 +99,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   Future<Map<String, dynamic>> checkUserDetails(String userName,
       String email) async {
-    final uri = Uri.parse('http://10.0.2.2:3000/registration/checkUserDetails')
+    final uri = Uri.parse('http://10.0.2.2:3000/auth/checkUserDetails')
         .replace(queryParameters: {
       'username': userName,
       'email': email,
