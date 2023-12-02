@@ -21,7 +21,7 @@ router.post('/pushAccount', async (req, res) => {
             // Hash the password
             const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
 
-            const query = `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`;
+            const query = `INSERT INTO Users (username, email, user_password) VALUES (?, ?, ?)`;
             db.query(query, [username, email, hashedPassword], (err, result) => {
                 closeConnection(db);
 
@@ -60,7 +60,7 @@ router.post('/pushAccount', async (req, res) => {
   
     // Check for username
     if (username) {
-      const usernameSql = "SELECT * FROM users WHERE username = ?";
+      const usernameSql = "SELECT * FROM Users WHERE username = ?";
       db.query(usernameSql, [username], (err, rows) => {
         if (err) {
           console.error('Database query error:', err);
@@ -74,7 +74,7 @@ router.post('/pushAccount', async (req, res) => {
   
         // Check for email, but only if it's provided
         if (email) {
-          const emailSql = "SELECT * FROM users WHERE email = ?";
+          const emailSql = "SELECT * FROM Users WHERE email = ?";
           db.query(emailSql, [email], (err, rows) => {
             closeConnection(db);
   
@@ -96,7 +96,7 @@ router.post('/pushAccount', async (req, res) => {
       });
     } else if (email) {
       // Only email was provided
-      const emailSql = "SELECT * FROM users WHERE email = ?";
+      const emailSql = "SELECT * FROM Users WHERE email = ?";
       db.query(emailSql, [email], (err, rows) => {
         closeConnection(db);
   
@@ -137,7 +137,7 @@ router.post('/pushAccount', async (req, res) => {
 
     console.log(`Provided password for ${username}: ${password}`); // Log the provided password (remove this in production)
 
-    const sqlSearch = "SELECT * FROM users WHERE username = ?";
+    const sqlSearch = "SELECT * FROM Users WHERE username = ?";
     db.query(mysql.format(sqlSearch, [username]), async (err, result) => {
         if (err) {
             console.error('Database query error:', err);
@@ -152,7 +152,7 @@ router.post('/pushAccount', async (req, res) => {
         }
 
         const user = result[0];
-        const hashedPassword = result[0].password;
+        const hashedPassword = result[0].user_password;
         console.log(`Stored hashed password for ${username}: ${hashedPassword}`); // Log the hashed password (remove this in production)
 
         try {
