@@ -372,7 +372,13 @@ class RestaurantItem extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: NetworkImage(restaurant.icon), // Assuming 'icon' is a URL to the restaurant's icon image.
+          backgroundColor: Colors.white,  // Set white background
+          child: Image.network(
+            restaurant.icon,  // Assuming 'icon' is a URL to the restaurant's icon image.
+            width: 40,  // Set the desired width
+            height: 40,  // Set the desired height
+            color: Colors.red,  // Set the desired accent color
+          ),
         ),
         title: Text(restaurant.name),  // Display the restaurant's name.
         subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
