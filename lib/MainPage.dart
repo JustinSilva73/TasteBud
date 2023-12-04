@@ -1,4 +1,5 @@
 
+
 import 'package:flutter/material.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
@@ -260,7 +261,7 @@ class _MainPageState extends State<MainPage> {
                       // Setting the initial position of the map to the user's current location.
                       initialCameraPosition: CameraPosition(
                         target: LatLng(position.latitude, position.longitude),
-                        zoom: 14.4746,  // Initial zoom level. Adjust this based on preference.
+                        zoom: 10,  // Initial zoom level. Adjust this based on preference.
                       ),
                       markers: _restaurantMarkers,  // Display all the restaurant markers on the map.
                       circles: _circles,  // Display the circle around the user's current location.
@@ -370,6 +371,15 @@ class RestaurantItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(5.0),
       ),
       child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.white,  // Set white background
+          child: Image.network(
+            restaurant.icon,  // Assuming 'icon' is a URL to the restaurant's icon image.
+            width: 40,  // Set the desired width
+            height: 40,  // Set the desired height
+            color: Colors.red,  // Set the desired accent color
+          ),
+        ),
         title: Text(restaurant.name),  // Display the restaurant's name.
         subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
         onTap: () {
@@ -379,7 +389,6 @@ class RestaurantItem extends StatelessWidget {
             ),
           );
         },
-
       ),
     );
   }

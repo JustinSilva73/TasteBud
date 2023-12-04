@@ -3,10 +3,10 @@ const axios = require('axios');
 const router = express.Router();
 
 const YELP_API_KEY = 'lGDedEU4j67hTkD58rj9kgeL1uKLRtqtX-LZkVZF3aBTJmNVMZfGUasXj7HXaxthZDG3StXwCbAKyjwgv3Huh85tAgnj_60On557Jqvj14HfV53qGMkbhROBCC8oZXYx';
-const getYelpRestaurantDetails = async (address) => {
+const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => {
     const options = {
         method: 'GET',
-        url: `https://api.yelp.com/v3/businesses/search?location=${encodeURIComponent(address)}&term=restaurant&categories=&open_now=true&sort_by=distance&limit=1`,
+        url: `https://api.yelp.com/v3/businesses/search?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&term=${encodeURIComponent('restaurant ' + restaurantName)}&categories=&open_now=true&sort_by=distance&limit=1`,
         headers: {
             accept: 'application/json',
             Authorization: `Bearer ${YELP_API_KEY}`
@@ -25,10 +25,18 @@ const getYelpRestaurantDetails = async (address) => {
         console.log(`Rate Remaining: ${rateRemaining}`);
         console.log(`Rate Reset: ${rateReset} (time in seconds until reset)`);
 
-        return {
-            imageUrl: response.data.businesses[0].image_url,
-            categories: response.data.businesses[0].categories.map(category => category.title)
-        };
+        // Check if businesses array is present and has at least one item
+        if (response.data.businesses && response.data.businesses.length > 0) {
+            const business = response.data.businesses[0];
+            return {
+                imageUrl: business.image_url,
+                categories: business.categories.map(category => category.title)
+            };
+        } else {
+            // Handle the case where no businesses are found
+            console.log('No businesses found for the given query.');
+            return null;
+        }
     } catch (error) {
         if (error.response) {
             console.error('Yelp API Error Response:', error.response.data);

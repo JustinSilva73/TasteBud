@@ -7,14 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'MainPage.dart';
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? storedEmail;
   bool isLoading = true;  // Add this to your _LoginPageState class
@@ -23,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _loadStoredEmail();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchAndStorePosition();
     });
     isLoading = false;
@@ -167,9 +166,42 @@ class _LoginPageState extends State<LoginPage> {
       print("Server responded with status code: ${response.statusCode}. Response: ${response.body}");
 
       print("Failed to fetch restaurants from server");
-      return [];
+      return []; 
     }
   }
+
+  Future<bool> _attemptLogin(String username, String password) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:3000/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+
+      if (responseData != null && responseData['success'] == true) {
+        if (responseData.containsKey('email')) {
+          String email = responseData['email'];
+          print("THE EMAIL IS ${email}");
+          await _saveEmailToStorage(email);
+          return true;
+        } else {
+          // Email not present in response
+          print('Email not provided in the response');
+          return false;
+        }
+      } else {
+        // Login success flag is not true
+        return false;
+      }
+    } else {
+      // Server returned an error status
+      return false;
+    }
+  }
+
+
 
 
   @override
@@ -184,12 +216,12 @@ class _LoginPageState extends State<LoginPage> {
             Image.asset('assets/logo.png', height: 200), // Logo size increased to 200 pixels in height
             SizedBox(height: 40),
 
-            // Email Input
+            // Username Input
             TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
+              controller: _usernameController,
+              keyboardType: TextInputType.text,
               decoration: const InputDecoration(
-                labelText: "Email",
+                labelText: "Username",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -208,39 +240,29 @@ class _LoginPageState extends State<LoginPage> {
 
             // Login Button
             ElevatedButton(
-              onPressed: isLoading  // Check if loading, if yes, make the button non-clickable
-                  ? null
-                  : () async {
-                String email = _emailController.text;
+              onPressed: isLoading ? null : () async {
+                String username = _usernameController.text;
                 String password = _passwordController.text;
-
-                if (!isValidEmail(email)) {
-                  // Show some feedback to the user about invalid email
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please enter a valid email!')),
-                  );
-                  return;
-                }
 
                 if (!isValidPassword(password)) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Password should be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character!')),
+                    SnackBar(content: Text('Invalid username or password format')),
                   );
                   return;
                 }
 
-                print('Email: $email');
-                print('Password: $password');
+                bool loginSuccess = await _attemptLogin(username, password);
 
-                await _saveEmailToStorage(email);
-                print('Stored email: $email');
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => MainPage()), // Assumes you have a CreateAccountPage widget
-                );
-
-                // Now you can use these values for your login logic, like making an API call, etc.
+                if (loginSuccess) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => MainPage()),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Incorrect login credentials')),
+                  );
+                }
               },
               child: Text("Log In"),
             ),
