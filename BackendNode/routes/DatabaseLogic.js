@@ -23,17 +23,6 @@ db.connect((err) => {
 router.use(bodyParser.json());
 
 // Define API endpoints for interacting with the database
-router.get('/getData', (req, res) => {
-  // Test query for grabbing user data
-  db.query('SELECT * FROM Restaurants', (error, results) => {
-    if (error) {
-      console.error('Error executing query: ' + error);
-      res.status(500).json({ error: 'Database query error' });
-    } else {
-      res.json(results);
-    }
-  });
-});
 
 // Add more routes for database operations here
 

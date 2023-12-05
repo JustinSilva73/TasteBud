@@ -30,6 +30,7 @@ const cuisineValues = {
 };
 //const setPriority = async (restaurants, email) => {
 router.post('/restaurantPrio', async (req, res) => {
+
     try {
         const restaurants = req.body.restaurants;
         const email = req.body.email;

@@ -5,6 +5,45 @@ const router = express.Router();
 const generateAccessToken = require("./GenerateAccessToken")
 const { openConnection, closeConnection } = require('../DatabaseLogic'); // Ensure you have these functions defined in DatabaseUtils.js
 
+async function insertCuisineWeights(db, column) {
+    return new Promise((resolve, reject) => {
+        const insertQuery = `INSERT INTO CuisineWeights (${column}) VALUES (50)`;
+        db.query(insertQuery, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function insertDistanceWeights(db) {
+    return new Promise((resolve, reject) => {
+        const insertQuery = `INSERT INTO DistanceWeight (near_weight, middle_weight, far_weight) VALUES (50, 50, 50)`;
+        db.query(insertQuery, [near_weight, middle_weight, far_weight], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function insertPriceWeights(db) {
+    return new Promise((resolve, reject) => {
+        const insertQuery = `INSERT INTO PriceWeights (one_weight, two_weight, three_weight, four_weight) VALUES (50, 50, 50, 50)`;
+        db.query(insertQuery, [one_weight, two_weight, three_weight, four_weight], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
 
 router.post('/pushAccount', async (req, res) => {
     const { username, email, password } = req.body;
@@ -30,15 +69,38 @@ router.post('/pushAccount', async (req, res) => {
                     res.status(500).json({ error: 'Database query error' });
                     return;
                 }
-                
-                console.log("Success", result);
-                res.json({ success: true, message: "Account created successfully" });
-            });
+
         } catch (err) {
             closeConnection(db);
             console.error('Error hashing password:', err);
             res.status(500).json({ error: 'Error hashing password' });
         }
+
+        try {
+            await insertDistanceWeights(db);
+
+            await insertPriceWeights(db);
+
+            await Promise.all([
+                insertCuisineWeights(db, 'american_weight'),
+                insertCuisineWeights(db, 'italian_weight'),
+                insertCuisineWeights(db, 'chinese_weight'),
+                insertCuisineWeights(db, 'japanese_weight'),
+                insertCuisineWeights(db, 'mexican_weight'),
+                insertCuisineWeights(db, 'indian_weight'),
+                insertCuisineWeights(db, 'mediterranean_weight'),
+                insertCuisineWeights(db, 'thai_weight'),
+                insertCuisineWeights(db, 'british_weight'),
+                insertCuisineWeights(db, 'spanish_weight')
+                ]);
+                console.log("Success", result);
+                closeConnection(db);
+                res.json({ success: true, message: "Account created successfully" });
+        } catch (error) {
+                closeConnection(db);
+                console.error('Error inserting default values:', error);
+                res.status(500).json({ error: 'Error inserting default values' });
+                }
     } else {
         console.log('Missing a parameter');
         res.status(400).json({ error: 'Missing a parameter' });
