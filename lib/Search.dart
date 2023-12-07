@@ -54,17 +54,17 @@ class _SearchPageState extends State<SearchPage> {
                     decoration: InputDecoration(
                       hintText: 'Search...',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
                       prefixIcon: const Icon(Icons.search),
                     ),
                   ),
                 ),
-                Container(width: 40), // Replace Spacer with Container, adjust width as needed
+                Container(width: 40),
+                // Replace Spacer with Container, adjust width as needed
               ],
             ),
           ),
-
           Expanded(
             child: ListView.builder(
               itemCount: filteredRestaurants.length,

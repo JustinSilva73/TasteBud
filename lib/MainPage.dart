@@ -1,6 +1,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:tastebud/CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,19 +27,26 @@ class _MainPageState extends State<MainPage> {
   Set<Marker> _restaurantMarkers = {};
   List<Restaurant> restaurants = [];
   GoogleMapController? mapController;
+  final double maxDistance = 14000; // 5 kilometers in meters
 
   @override
   void initState() {
     super.initState();
+    _initializePositionFuture();
     _initializeData();
+  }
+
+  void _initializePositionFuture() {
+    positionFuture = _determinePosition();
   }
 
   _initializeData() async {
     await _loadPositionFromStorage();
-    positionFuture = _determinePosition();
+    _initializePositionFuture();
     _loadStoredEmail();
     _loadStoredRestaurants();
   }
+
 
 
 
@@ -150,15 +158,13 @@ class _MainPageState extends State<MainPage> {
       restaurants = fetchedRestaurants;  // Update the restaurants list
     });
     if (fetchedRestaurants.isNotEmpty) {
-      LatLngBounds bounds = _boundsOfRestaurants(fetchedRestaurants);
+      LatLngBounds bounds = _boundsOfRestaurants(fetchedRestaurants, currentPosition!, maxDistance);
       _updateCameraBounds(bounds);
     }
   }
 
 
   Future<Position?> _determinePosition() async {
-
-    // Add a circle overlay for the current position
     if (currentPosition != null) {
       _circles.add(
         Circle(
@@ -172,16 +178,37 @@ class _MainPageState extends State<MainPage> {
       );
     }
     print("Current Position: $currentPosition");
-    return currentPosition; // Return the position here
+    return currentPosition;
   }
 
-  LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants) {
-    double minLat = restaurants[0].location.latitude;
-    double maxLat = restaurants[0].location.latitude;
-    double minLng = restaurants[0].location.longitude;
-    double maxLng = restaurants[0].location.longitude;
 
-    for (var restaurant in restaurants) {
+  LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants, Position currentPosition, double maxDistance) {
+    // Filter restaurants based on distance from the current position
+    var filteredRestaurants = restaurants.where((restaurant) {
+      var distance = Geolocator.distanceBetween(
+        currentPosition.latitude,
+        currentPosition.longitude,
+        restaurant.location.latitude,
+        restaurant.location.longitude,
+      );
+      return distance <= maxDistance; // maxDistance in meters
+    }).toList();
+
+    // If no restaurants are within the max distance, return some default bounds or handle this scenario appropriately
+    if (filteredRestaurants.isEmpty) {
+      return LatLngBounds(
+        southwest: LatLng(currentPosition.latitude, currentPosition.longitude),
+        northeast: LatLng(currentPosition.latitude, currentPosition.longitude),
+      );
+    }
+
+    // Initialize with the first restaurant's location
+    double minLat = filteredRestaurants[0].location.latitude;
+    double maxLat = filteredRestaurants[0].location.latitude;
+    double minLng = filteredRestaurants[0].location.longitude;
+    double maxLng = filteredRestaurants[0].location.longitude;
+
+    for (var restaurant in filteredRestaurants) {
       if (restaurant.location.latitude < minLat) minLat = restaurant.location.latitude;
       if (restaurant.location.latitude > maxLat) maxLat = restaurant.location.latitude;
       if (restaurant.location.longitude < minLng) minLng = restaurant.location.longitude;
@@ -206,6 +233,7 @@ class _MainPageState extends State<MainPage> {
   }
 
 
+
   Future<void> _updateCameraBounds(LatLngBounds bounds) async {
     await Future.delayed(const Duration(milliseconds: 300));
     CameraUpdate zoomIn = CameraUpdate.zoomIn();  // A CameraUpdate to zoom in
@@ -219,31 +247,41 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Restaurant"),
+        backgroundColor: Color(0xFFA30000), // Sets the background color of the AppBar
+        title: Text(
+          "Restaurant",
+          style: TextStyle(color: Colors.white), // Sets the title text color
+        ),
+        iconTheme: IconThemeData(color: Colors.white), // Sets the icon color
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: Icon(Icons.search),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => SearchPage(allRestaurants: restaurants),
               ));
             },
-          )
+          ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0),
+          child: Container(
+            color: Colors.black,
+            height: 0.5, // Thickness of the bottom border
+          ),
+        ),
       ),
       body: Column(
         children: [
           SizedBox(
             height: 200,  // Setting a fixed height for the map.
             child: FutureBuilder<Position?>(
-              future: positionFuture,  // This is the future that gets the user's location.
+              future: positionFuture,
               builder: (BuildContext context, AsyncSnapshot<Position?> snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
-                // Check if the Future is complete.
-                if (snapshot.connectionState == ConnectionState.done) {
-
+                if (snapshot.hasData && snapshot.data != null) {
                   // If we have valid position data.
                   if (snapshot.hasData && snapshot.data != null) {
                     Position position = snapshot.data!;
@@ -253,8 +291,8 @@ class _MainPageState extends State<MainPage> {
                         mapController = controller;  // Storing the map controller for future use.
 
                         // If there are any restaurants fetched before the map was created, we should set the bounds immediately.
-                        if (restaurants.isNotEmpty) {
-                          LatLngBounds bounds = _boundsOfRestaurants(restaurants);
+                        if (restaurants.isNotEmpty && currentPosition != null) {
+                          LatLngBounds bounds = _boundsOfRestaurants(restaurants, currentPosition!, maxDistance);
                           _updateCameraBounds(bounds);
                         }
                       },
@@ -300,6 +338,7 @@ class Restaurant {
   final String cuisine;
   final LatLng location;
   final String imageUrl;
+  final String url;
   final double rating;
   final int priceLevel;
   final String icon;
@@ -313,6 +352,7 @@ class Restaurant {
     required this.cuisine,
     required this.location,
     required this.imageUrl,
+    required this.url,
     required this.rating,
     required this.priceLevel,
     required this.icon,
@@ -329,6 +369,7 @@ class Restaurant {
       cuisine: json['categories_of_cuisine'],
       location: LatLng(json['lat'], json['lng']),
       imageUrl: json['image_url'],
+      url: json['url'],
       rating: json['rating'].toDouble(),
       priceLevel: json['price_level'] ?? 0,
       icon: json['icon'],
@@ -345,6 +386,7 @@ class Restaurant {
       'lat': location.latitude,
       'lng': location.longitude,
       'image_url': imageUrl,
+      'url' : url,
       'rating': rating,
       'price_level': priceLevel,
       'icon': icon,

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'MainPage.dart';  // Replace with the path to the file where the Restaurant class is defined.
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:core';
+import 'dart:io';
 
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
@@ -34,6 +39,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
 
   String priceLevelToString(int priceLevel) {
     switch (priceLevel) {
+      case 0:
+        return 'Not available';
       case 1:
         return '\$';
       case 2:
@@ -46,6 +53,41 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         throw ArgumentError('Invalid price level: $priceLevel');
     }
   }
+  Future<void> _launchMapsUrl(LatLng location) async {
+    try {
+      final Uri url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}');
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      print('Failed to launch URL: $e');
+    }
+  }
+/*
+  Future<void> _launchWebsiteUrl(String urlString, {String fallbackSearchQuery = ''}) async {
+    String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
+    String browserFallbackUrl = urlString;  // Regular HTTP/HTTPS URL for fallback
+
+    try {
+      // Try launching the URL with the custom scheme first (for Google Chrome on Android)
+      if (Platform.isAndroid && await canLaunchUrlString(chromeSchemeUrl)) {
+        await launchUrlString(chromeSchemeUrl);
+      }
+      // Fallback to the regular HTTP/HTTPS URL if custom scheme fails or on non-Android platforms
+      else if (await canLaunchUrlString(browserFallbackUrl)) {
+        await launchUrlString(browserFallbackUrl);
+      } else {
+        throw 'Could not launch URL';
+      }
+    } catch (e) {
+      print('Failed to launch URL: $e');
+    }
+  }
+
+*/
+
 
   Widget _buildButton(String text, IconData icon, VoidCallback onPressed) {
     return ElevatedButton.icon(
@@ -87,7 +129,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     child: IconButton(
                       icon: Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        // TODO: Implement navigation logic
                         Navigator.of(context).pop();
                       },
                     ),
@@ -178,16 +219,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       _buildButton(
                         'Directions',
                         Icons.directions,
-                            () {
-                          // TODO: Implement your logic for directions
-                        },
+                            () => _launchMapsUrl(widget.restaurant.location),
                       ),
                       _buildButton(
                         'Visit Website',
                         Icons.public,
-                            () {
-                          // TODO: Implement your logic for visiting the website
-                        },
+                            () => launchUrlString(widget.restaurant.url),
                       ),
                     ],
                   ),

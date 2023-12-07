@@ -30,7 +30,8 @@ const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => 
             const business = response.data.businesses[0];
             return {
                 imageUrl: business.image_url,
-                categories: business.categories.map(category => category.title)
+                categories: business.categories.map(category => category.title),
+                url: business.url
             };
         } else {
             // Handle the case where no businesses are found
@@ -43,7 +44,7 @@ const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => 
         } else {
             console.error('Error fetching from Yelp API:', error.message);
         }
-        // Additionally, if you want to inspect error response headers
+       //if you want to inspect error response headers
         if (error.response && error.response.headers) {
             const rateLimit = error.response.headers["ratelimit-limit"];
             const rateRemaining = error.response.headers["ratelimit-remaining"];

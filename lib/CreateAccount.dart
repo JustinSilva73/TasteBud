@@ -134,9 +134,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       data: themeData,
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 0, // Ensures the AppBar takes up no space
-          elevation: 0, // Removes the shadow
-          backgroundColor: Theme.of(context).primaryColor, // Sets the AppBar's background color to the theme's primary color
+            toolbarHeight: 0, // Ensures the AppBar takes up no space
+            elevation: 0, // Removes the shadow
+            backgroundColor: primaryColor, // Sets the AppBar's background color to the theme's primary color
         ),
         body: SafeArea( // SafeArea is applied here to avoid the status bar
           top: true, // Apply padding to the top of SafeArea
@@ -176,7 +176,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   decoration: const InputDecoration(
                     labelText: "Email",
                     labelStyle: TextStyle(
-                      // Set the color of the label text when it's not focused
                       color: Colors.grey, // Use a neutral color when the field is not focused
                     ),
                     // When the field is focused, use the focusedBorder to change the underline color
@@ -213,7 +212,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 SizedBox(height: 40),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: primaryColor,
+                    primary: primaryColor, // This is the background color of the button
+                    onPrimary: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),

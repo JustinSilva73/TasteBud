@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tastebud/MainPage.dart';
+import 'package:http/http.dart' as http;
 
 //Question Class meant for a list in order to hold all quesitons and answers
 class Question {
@@ -9,7 +12,6 @@ class Question {
   final List<String> answers;
   final bool isMultipleChoice;
   List<int> selectedAnswers;
-
   Question({required this.questionText, required this.answers, this.isMultipleChoice = false, selectedAnswers})
       : selectedAnswers = selectedAnswers ?? [];
 
@@ -43,6 +45,7 @@ class _SurveyPageState extends State<SurveyPage> {
   late PageController _controller;
   List<Question> questions = surveyQuestions; // Initialize immediately
   int _currentPage = 0;  // Initialize _currentPage
+  String? storedEmail;
 
   @override
   void initState() {
@@ -53,6 +56,96 @@ class _SurveyPageState extends State<SurveyPage> {
     );
     questions = surveyQuestions; // Initialize the questions list here
   }
+
+  _loadStoredEmail() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      storedEmail = prefs.getString('storedEmail');
+    });
+  }
+
+  Future<void> submitAllAnswers() async {
+    // Here we'll store the answers in the format that the backend expects.
+    List<String> priceAnswers = [];
+    List<String> distanceAnswers = [];
+    List<String> cuisineAnswers = [];
+
+    // This is just an example. You would need to map your answers to these categories based on the actual questions.
+    for (var question in questions) {
+      var answerTexts = question.selectedAnswers.map((index) => question.answers[index]).toList();
+      switch (question.questionText) {
+        case "What is your preferred price?":
+          priceAnswers = answerTexts;
+          break;
+        case "What is your preferred distance?":
+          distanceAnswers = answerTexts;
+          break;
+        case "What are your favorite cuisines?":
+          cuisineAnswers = answerTexts;
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Retrieve the user's email from shared preferences or another source
+    String userEmail = await _loadStoredEmail(); // Implement this method based on where you store the email
+
+    // Now submit the data
+    bool success = await submitSurveyData(
+      email: userEmail,
+      prices: priceAnswers,
+      distances: distanceAnswers,
+      cuisines: cuisineAnswers,
+    );
+
+    if (success) {
+      // Navigate to the MainPage or handle success
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage()),
+            (Route<dynamic> route) => false,
+      );
+    } else {
+      // Handle failure
+      print('Failed to submit survey data');
+    }
+  }
+
+  Future<bool> submitSurveyData({
+    required String email,
+    required List<String> prices,
+    required List<String> distances,
+    required List<String> cuisines,
+  }) async {
+    final uri = Uri.parse('http://10.0.2.2:3000/survey/survey');
+    final body = json.encode({
+      'email': email,
+      'price': prices.join(','), // Assuming your backend expects a string
+      'distance': distances.join(','), // Assuming your backend expects a string
+      'cuisine': cuisines.join(','), // Assuming your backend expects a string
+    });
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        print('Survey data submitted successfully');
+        return true;
+      } else {
+        print('Failed to submit survey data: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error submitting survey data: $e');
+      return false;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +298,8 @@ class _SurveyPageState extends State<SurveyPage> {
                 maintainState: true,
                 visible: question.isAnswerSelected, // Control visibility based on answer selection
                 child: GestureDetector(
-                  onTap: question.isAnswerSelected ? () {
+                  // Replace the onTap method for the 'Submit' button
+                  onTap: question.isAnswerSelected ? () async {
                     if (questionIndex < questions.length - 1) {
                       setState(() {
                         _currentPage += 1;
@@ -216,33 +310,10 @@ class _SurveyPageState extends State<SurveyPage> {
                         curve: Curves.easeIn,
                       );
                     } else {
-                      // Iterate through each question to prepare data for endpoint calls
-                      for (var question in questions) {
-                        var answerTexts = question.selectedAnswers.map((index) => question.answers[index]).toList();
-
-                        // Prepare data for an individual question
-                        var questionData = {
-                          'question': question.questionText,
-                          'answers': answerTexts,
-                        };
-
-                        // Example: await sendQuestionDataToEndpoint(questionData);
-
-                        // You can also print or handle the questionData as needed
-                        print('Submitting question: ${question.questionText}');
-                        print('Question Data: $questionData');
-                      }
-
-                      print('All questions submitted!');
-
-                      // Navigate to the MainPage
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => MainPage()),
-                            (Route<dynamic> route) => false, // Removes all previous routes
-                      );
+                      // Call the function to submit all answers
+                      await submitAllAnswers();
                     }
-                  } : null, // Disable tap when the answer is not selected
+                  } : null,
                   child: Opacity(
                     opacity: question.isAnswerSelected ? 1.0 : 0.0, // Control the opacity
                     child: Text(

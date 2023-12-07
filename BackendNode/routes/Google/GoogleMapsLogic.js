@@ -65,13 +65,16 @@ router.get('/restaurants', async (req, res) => {
             basicDetails.image_url = yelpDetails && yelpDetails.imageUrl
                 ? yelpDetails.imageUrl
                 : getRandomItem(defaultYelpDetails.imageUrls);
+            
+            basicDetails.url = yelpDetails && yelpDetails.url
+                ? yelpDetails.url
+                : "https://www.yelp.com"
+            
+            console.log("Assigned URL:", basicDetails.url); // Log the assigned URL for debugging
 
             filteredPlaces.push(basicDetails);
         } 
         res.json(filteredPlaces); 
-        filteredPlaces.forEach(place => {
-            console.log("After setting from Yelp: ", place.image_url);
-        });
     } catch (error) {
         console.error('Error fetching from Google Maps API:', error);
         res.status(500).json({ error: 'Failed to fetch data from Google Maps API.' });
