@@ -270,6 +270,9 @@ class _LoginPageState extends State<LoginPage> {
 
             // Login Button
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: primaryColor,
+              ),
               onPressed: isLoading ? null : () async {
                 String username = _usernameController.text;
                 String password = _passwordController.text;
