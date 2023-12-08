@@ -247,6 +247,11 @@ class _LoginPageState extends State<LoginPage> {
             ),
             // Username Input
             const SizedBox(height: 30),
+    Expanded(
+    child: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 50.0),
+    child: Column(
+    children: [
             TextField(
               controller: _usernameController,
               keyboardType: TextInputType.text,
@@ -318,6 +323,10 @@ class _LoginPageState extends State<LoginPage> {
           ],
         ),
       ),
+    ),
+    ],A
+    ),
+    ),
     ),
     );
   }
