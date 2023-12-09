@@ -4,46 +4,118 @@ const mysql = require("mysql");
 const router = express.Router();
 const generateAccessToken = require("./GenerateAccessToken")
 const { openConnection, closeConnection } = require('../DatabaseLogic'); // Ensure you have these functions defined in DatabaseUtils.js
+async function insertCuisineWeights(db, userId, column) {
+  return new Promise((resolve, reject) => {
+      // Make sure to use backticks for column names and placeholders for values
+      const insertQuery = `INSERT INTO CuisineWeights (user_id, ${column}) VALUES (?, 50)`;
+      db.query(insertQuery, [userId], (err, result) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(result);
+          }
+      });
+  });
+}
+
+
+
+
+async function insertDistanceWeights(db, userId) {
+  return new Promise((resolve, reject) => {
+      const insertQuery = `INSERT INTO DistanceWeight (user_id, near_weight, middle_weight, far_weight) VALUES (?, 50, 50, 50)`;
+      db.query(insertQuery, [userId], (err, result) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(result);
+          }
+      });
+  });
+}
+
+
+
+async function insertPriceWeights(db, userId) {
+  return new Promise((resolve, reject) => {
+      const insertQuery = `INSERT INTO PriceWeights (user_id, one_weight, two_weight, three_weight, four_weight) VALUES (?, 50, 50, 50, 50)`;
+      db.query(insertQuery, [userId], (err, result) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(result);
+          }
+      });
+  });
+}
+
+
 
 
 router.post('/pushAccount', async (req, res) => {
-    const { username, email, password } = req.body;
-    
-    if (username && email && password) {
-        console.log('Request received');
-        
-        const db = openConnection();
-        if (!db) {
-            return res.status(500).json({ error: 'Failed to connect to the database' });
-        }
+  const { username, email, password } = req.body;
+  
+  if (username && email && password) {
+      console.log('Request received');
+      
+      const db = openConnection();
+      if (!db) {
+          return res.status(500).json({ error: 'Failed to connect to the database' });
+      }
 
-        try {
-            // Hash the password
-            const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
+      try {
+          // Hash the password
+          const hashedPassword = await bcrypt.hash(password, 10);
 
-            const query = `INSERT INTO Users (username, email, user_password) VALUES (?, ?, ?)`;
-            db.query(query, [username, email, hashedPassword], (err, result) => {
+          // Insert user into the database
+          const query = `INSERT INTO Users (username, email, user_password) VALUES (?, ?, ?)`;
+          const insertResult = await new Promise((resolve, reject) => {
+              db.query(query, [username, email, hashedPassword], (err, result) => {
+                  if (err) {
+                      reject(err);
+                  } else {
+                      resolve(result);
+                  }
+              });
+          });
+
+          if (insertResult && insertResult.insertId) {
+              const userId = insertResult.insertId;
+              console.log(`User inserted with ID: ${userId}`);
+
+              // Now pass this userId to your functions
+              await insertDistanceWeights(db, userId);
+              await insertPriceWeights(db, userId);
+
+            await Promise.all([
+                insertCuisineWeights(db, userId, 'american_weight'),
+                insertCuisineWeights(db, userId, 'italian_weight'),
+                insertCuisineWeights(db, userId, 'chinese_weight'),
+                insertCuisineWeights(db, userId,'japanese_weight'),
+                insertCuisineWeights(db, userId, 'mexican_weight'),
+                insertCuisineWeights(db, userId, 'indian_weight'),
+                insertCuisineWeights(db, userId, 'mediterranean_weight'),
+                insertCuisineWeights(db, userId, 'thai_weight'),
+                insertCuisineWeights(db, userId, 'british_weight'),
+                insertCuisineWeights(db, userId, 'spanish_weight')
+              ]);
+                console.log("Success");
                 closeConnection(db);
-
-                if (err) {
-                    console.log(err);
-                    res.status(500).json({ error: 'Database query error' });
-                    return;
-                }
-                
-                console.log("Success", result);
-                res.json({ success: true, message: "Account created successfully" });
-            });
-        } catch (err) {
+                return res.json({ success: true, message: "Account created successfully" });
+            } else {
+                throw new Error('User ID not returned from insert operation');
+            }
+        } catch (error) {
             closeConnection(db);
-            console.error('Error hashing password:', err);
-            res.status(500).json({ error: 'Error hashing password' });
+            console.error('Error:', error);
+            return res.status(500).json({ error: 'Error in processing request' });
         }
     } else {
         console.log('Missing a parameter');
-        res.status(400).json({ error: 'Missing a parameter' });
+        return res.status(400).json({ error: 'Missing a parameter' });
     }
 });
+
 
   router.get('/checkUserDetails', (req, res) => {
     const { username, email } = req.query;
