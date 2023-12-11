@@ -57,12 +57,15 @@ class _SurveyPageState extends State<SurveyPage> {
     questions = surveyQuestions; // Initialize the questions list here
   }
 
-  _loadStoredEmail() async {
+  Future<String?> _loadStoredEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('storedEmail');
     setState(() {
-      storedEmail = prefs.getString('storedEmail');
+      storedEmail = email;
     });
+    return email;
   }
+
 
   Future<void> submitAllAnswers() async {
     // Here we'll store the answers in the format that the backend expects.
@@ -87,9 +90,12 @@ class _SurveyPageState extends State<SurveyPage> {
           break;
       }
     }
-
-    // Retrieve the user's email from shared preferences or another source
-    String userEmail = await _loadStoredEmail(); // Implement this method based on where you store the email
+    String? userEmail = await _loadStoredEmail(); // Make sure to await the result
+    if (userEmail == null) {
+      // Handle the case where userEmail is null
+      print('No stored email found');
+      return;
+    } // Implement this method based on where you store the email
 
     // Now submit the data
     bool success = await submitSurveyData(
@@ -111,6 +117,65 @@ class _SurveyPageState extends State<SurveyPage> {
       print('Failed to submit survey data');
     }
   }
+  Map<String, dynamic> mapAnswersToColumnNames(List<String> selectedPrices, List<String> selectedDistances, List<String> selectedCuisines) {
+    Map<String, dynamic> mappedData = {
+      'price': [],
+      'distance': [],
+      'cuisine': []
+    };
+
+    // Define the base weights for each type of question
+    const int selectedScore = 25;
+    const int unselectedScore = -25;
+
+    // Define all possible options
+    const List<String> allPrices = ['\$', '\$\$', '\$\$\$', '\$\$\$\$'];
+    const List<String> allDistances = ['Near (<5mi)', 'Somewhat Near (5-10mi)', 'Far (>10mi)'];
+    const List<String> allCuisines = ['American', 'Italian', 'Chinese', 'Japanese', 'Mexican', 'Indian', 'Mediterranean', 'Thai'];
+
+    // Mapping weights
+    const Map<String, String> priceWeights = {
+      '\$': 'one_weight',
+      '\$\$': 'two_weight',
+      '\$\$\$': 'three_weight',
+      '\$\$\$\$': 'four_weight',
+    };
+    const Map<String, String> distanceWeights = {
+      'Near (<5mi)': 'near_weight',
+      'Somewhat Near (5-10mi)': 'middle_weight',
+      'Far (>10mi)': 'far_weight',
+    };
+    const Map<String, String> cuisineWeights = {
+      'American': 'american_weight',
+      'Italian': 'italian_weight',
+      'Chinese': 'chinese_weight',
+      'Japanese': 'japanese_weight',
+      'Mexican': 'mexican_weight',
+      'Indian': 'indian_weight',
+      'Mediterranean': 'mediterranean_weight',
+      'Thai': 'thai_weight',
+      // Add other cuisine mappings here
+    };
+
+    // Assign weights to each price option
+    for (var price in allPrices) {
+      mappedData['price'].add({priceWeights[price] ?? '': selectedPrices.contains(price) ? selectedScore : unselectedScore});
+    }
+
+    // Assign weights to each distance option
+    for (var distance in allDistances) {
+      mappedData['distance'].add({distanceWeights[distance] ?? '': selectedDistances.contains(distance) ? selectedScore : unselectedScore});
+    }
+
+    // Assign weights to each cuisine option
+    for (var cuisine in allCuisines) {
+      mappedData['cuisine'].add({cuisineWeights[cuisine] ?? '': selectedCuisines.contains(cuisine) ? selectedScore : unselectedScore});
+    }
+
+    return mappedData;
+  }
+
+
 
   Future<bool> submitSurveyData({
     required String email,
@@ -118,13 +183,14 @@ class _SurveyPageState extends State<SurveyPage> {
     required List<String> distances,
     required List<String> cuisines,
   }) async {
+    final mappedData = mapAnswersToColumnNames(prices, distances, cuisines);
+
+    // Add email to the mapped data
+    mappedData['email'] = email;
+    print(mappedData); // Should show keys and values for email, price, distance, and cuisine
+
     final uri = Uri.parse('http://10.0.2.2:3000/survey/survey');
-    final body = json.encode({
-      'email': email,
-      'price': prices.join(','), // Assuming your backend expects a string
-      'distance': distances.join(','), // Assuming your backend expects a string
-      'cuisine': cuisines.join(','), // Assuming your backend expects a string
-    });
+    final body = json.encode(mappedData);
 
     try {
       final response = await http.post(

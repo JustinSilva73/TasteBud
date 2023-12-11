@@ -4,10 +4,10 @@ const mysql = require("mysql");
 const router = express.Router();
 const generateAccessToken = require("./GenerateAccessToken")
 const { openConnection, closeConnection } = require('../DatabaseLogic'); // Ensure you have these functions defined in DatabaseUtils.js
-async function insertCuisineWeights(db, userId, column) {
+async function insertCuisineWeights(db, userId) {
   return new Promise((resolve, reject) => {
-      // Make sure to use backticks for column names and placeholders for values
-      const insertQuery = `INSERT INTO CuisineWeights (user_id, ${column}) VALUES (?, 50)`;
+      // Include all cuisine columns in one insert statement
+      const insertQuery = `INSERT INTO CuisineWeights (user_id, american_weight, italian_weight, chinese_weight, japanese_weight, mexican_weight, indian_weight, mediterranean_weight, thai_weight, british_weight, spanish_weight) VALUES (?, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50)`;
       db.query(insertQuery, [userId], (err, result) => {
           if (err) {
               reject(err);
@@ -17,6 +17,7 @@ async function insertCuisineWeights(db, userId, column) {
       });
   });
 }
+
 
 
 
@@ -86,19 +87,8 @@ router.post('/pushAccount', async (req, res) => {
               // Now pass this userId to your functions
               await insertDistanceWeights(db, userId);
               await insertPriceWeights(db, userId);
+              await insertCuisineWeights(db, userId),
 
-            await Promise.all([
-                insertCuisineWeights(db, userId, 'american_weight'),
-                insertCuisineWeights(db, userId, 'italian_weight'),
-                insertCuisineWeights(db, userId, 'chinese_weight'),
-                insertCuisineWeights(db, userId,'japanese_weight'),
-                insertCuisineWeights(db, userId, 'mexican_weight'),
-                insertCuisineWeights(db, userId, 'indian_weight'),
-                insertCuisineWeights(db, userId, 'mediterranean_weight'),
-                insertCuisineWeights(db, userId, 'thai_weight'),
-                insertCuisineWeights(db, userId, 'british_weight'),
-                insertCuisineWeights(db, userId, 'spanish_weight')
-              ]);
                 console.log("Success");
                 closeConnection(db);
                 return res.json({ success: true, message: "Account created successfully" });

@@ -41,7 +41,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   @override
   void initState() {
     super.initState();
-    _loadStoredEmail();
   }
 
   // Function to save email to local storage
@@ -51,12 +50,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   // Function to load email from local storage and set it to _emailController
-  _loadStoredEmail() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      storedEmail = prefs.getString('storedEmail');
-    });
-  }
+
 
   bool isValidEmail(String email) {
     final pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
@@ -143,7 +137,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           child: Column(
             children: [
               HeaderWidget(
-                height: isKeyboardOpen ? screenHeight * 0.15 : screenHeight * 0.3 + 20,
+                height: isKeyboardOpen ? screenHeight * 0.13 : screenHeight * 0.3 + 20,
               ),
               Expanded(
                 child: Padding(
@@ -261,6 +255,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     );
                   } else {
                     await pushCreateAccount(username, email, password);
+                    await _saveEmailToStorage(email);
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => SurveyPage()),

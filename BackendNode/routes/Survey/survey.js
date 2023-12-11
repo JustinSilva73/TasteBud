@@ -2,240 +2,115 @@ const bcrypt = require("bcrypt");
 const express = require('express');
 const mysql = require("mysql");
 const router = express.Router();
-const { openConnection, closeConnection } = require('../DatabaseLogic'); // Ensure you have these functions defined in DatabaseUtils.js
-
+const { openConnection, closeConnection } = require('../DatabaseLogic');
 
 router.post('/survey/', async (req, res) => {
     const { email, price, distance, cuisine } = req.body;
 
-        if (email && price && distance && cuisine) {
-            console.log('Request received');
+    if (!(email && price && distance && cuisine)) {
+        return res.status(400).json({ error: 'Missing one or more parameters' });
+    }
 
-        let db = openConnection();
-        if (!db) {
-            return res.status(500).json({ error: 'Failed to connect to the database' });
-        }
+    let db = openConnection();
+    if (!db) {
+        return res.status(500).json({ error: 'Failed to connect to the database' });
+    }
 
-        try {
+    try {
+        // Query to get user's current weights
+        const queryWeights = `SELECT u.user_id,
+            CW.american_weight, CW.italian_weight, CW.chinese_weight, CW.japanese_weight, CW.mexican_weight, CW.indian_weight, CW.mediterranean_weight, CW.thai_weight,
+            DW.near_weight, DW.middle_weight, DW.far_weight,
+            PW.one_weight, PW.two_weight, PW.three_weight, PW.four_weight
+            FROM Users as u
+            LEFT JOIN tastebud.CuisineWeights CW ON u.user_id = CW.user_id
+            LEFT JOIN tastebud.DistanceWeight DW ON u.user_id = DW.user_id
+            LEFT JOIN tastebud.PriceWeights PW ON u.user_id = PW.user_id
+            WHERE u.email = ?`;
 
-            const query_cuisine = `SELECT u.user_id,
-                american_weight,
-                italian_weight,
-                chinese_weight,
-                japanese_weight,
-                mexican_weight,
-                indian_weight,
-                mediterranean_weight,
-                thai_weight
-                
-     from Users as u
-              join tastebud.CuisineWeights CW on u.user_id = CW.user_id
-              
-     WHERE email =?`;
+        db.query(queryWeights, [email], (err, results) => {
+            if (err) {
+                console.log(err);
+                closeConnection(db);
+                return res.status(500).json({ error: 'Database query error' });
+            }
 
+            if (results.length === 0) {
+                closeConnection(db);
+                return res.status(404).json({ error: 'User not found' });
+            }
 
+            let currentUserWeights = results[0];
 
-
-            let score = 20;
-            db.query(query_cuisine, [email], (err, result) => {
-
-let res=result[0]
-                if (err) {
-                    console.log(err);
-                    res.status(500).json({ error: 'Database query error' });
-                    return;
-                }
-
-                console.log("Success", res);
-                Object.keys(res).forEach((key) => {
-                    console.log('key', key)
-                    console.log('cuisine', cuisine)
-                    if (key != "user_id") {
-
-                        if (cuisine.includes(key)) {
-                            console.log('update')
-                            res[key] = res[key]+score
-                        }
-                        else { res[key]= res[key] - score }
-                    }
-
-
-                }); console.log('result ', res)
-                const update_cuisine = `UPDATE CuisineWeights
-                set american_weight=?,
-                    italian_weight=?,
-                    chinese_weight=?,
-                    japanese_weight=?,
-                    mexican_weight=?,
-                    indian_weight=?,
-                    mediterranean_weight=?,
-                    thai_weight=?
-                WHERE user_id=?`
-                try {
-                    db.query(update_cuisine, [res["american_weight"], res["italian_weight"], res["chinese_weight"], res["japanese_weight"], res["mexican_weight"], res["indian_weight"], res["mediterranean_weight"], res["thai_weight"], res["user_id"]]
-                        , (err, result) => {
-                            if (err) {
-                                console.log(err);
-                                res.status(500).json({ error: 'Database query error' });
-                                return;
-                            }
-                            console.log("Success", result);
-                        });
-                } catch (err) {
-                }
+            // Update cuisine weights
+            cuisine.forEach(item => {
+                const key = Object.keys(item)[0];
+                currentUserWeights[key] += item[key];
             });
-        } catch (err) {
 
-        }
-        try {
+            // Update distance weights
+            distance.forEach(item => {
+                const key = Object.keys(item)[0];
+                currentUserWeights[key] += item[key];
+            });
 
-            const query_distance = `SELECT u.user_id,
-            near_weight,
-            far_weight,
-            middle_weight
-                
-     from Users as u
-              join tastebud.DistanceWeight CW on u.user_id = CW.user_id
-              
-     WHERE email =?`;
-            let score = 20;
-            db.query(query_distance, [email], (err, result) => {
-                res=result[0]
+            // Update price weights
+            price.forEach(item => {
+                const key = Object.keys(item)[0];
+                currentUserWeights[key] += item[key];
+            });
+
+            // Prepare update queries
+            const updateCuisineQuery = `UPDATE CuisineWeights SET ? WHERE user_id = ?`;
+            const updateDistanceQuery = `UPDATE DistanceWeight SET ? WHERE user_id = ?`;
+            const updatePriceQuery = `UPDATE PriceWeights SET ? WHERE user_id = ?`;
+
+            // Extract relevant parts for each update
+            const cuisineUpdate = {
+                american_weight: currentUserWeights.american_weight,
+                italian_weight: currentUserWeights.italian_weight,
+                chinese_weight: currentUserWeights.chinese_weight,
+                japanese_weight: currentUserWeights.japanese_weight,
+                mexican_weight: currentUserWeights.mexican_weight,
+                indian_weight: currentUserWeights.indian_weight,
+                mediterranean_weight: currentUserWeights.mediterranean_weight,
+                thai_weight: currentUserWeights.thai_weight,
+            };
+
+            const distanceUpdate = {
+                near_weight: currentUserWeights.near_weight,
+                middle_weight: currentUserWeights.middle_weight,
+                far_weight: currentUserWeights.far_weight,
+            };
+
+            const priceUpdate = {
+                one_weight: currentUserWeights.one_weight,
+                two_weight: currentUserWeights.two_weight,
+                three_weight: currentUserWeights.three_weight,
+                four_weight: currentUserWeights.four_weight,
+            };
+
+            // Perform updates
+            db.query(updateCuisineQuery, [cuisineUpdate, currentUserWeights.user_id], updateErrorHandler);
+            db.query(updateDistanceQuery, [distanceUpdate, currentUserWeights.user_id], updateErrorHandler);
+            db.query(updatePriceQuery, [priceUpdate, currentUserWeights.user_id], updateErrorHandler);
+
+            function updateErrorHandler(err, result) {
                 if (err) {
                     console.log(err);
-                    res.status(500).json({ error: 'Database query error' });
-                    return;
-                }
-
-                console.log("Success", result);
-                Object.keys(res).forEach((key) => {
-                    console.log('key', key)
-                    console.log('cuisine', cuisine)
-                    if (key != "user_id") {
-
-                        if (distance.includes(key)) {
-                            console.log('update')
-                            res[key] = res[key]+score
-                        }
-                        else { res[key]= res[key] - score }
-                    }}); 
-                const update_distance = `UPDATE DistanceWeight
-        set near_weight=?,
-        far_weight=?,
-        middle_weight=?
-
-        WHERE user_id=?`
-                try {
-
-                    let score = 20;
-
-
-                    db.query(update_distance, [res["near_weight"], res["far_weight"], res["middle_weight"], res["user_id"]]
-
-                        , (err, result) => {
-                            closeConnection(db);
-
-                            if (err) {
-                                console.log(err);
-                                res.status(500).json({ error: 'Database query error' });
-                                return;
-                            }
-
-                            console.log("Success", result);
-                        });
-                } catch (err) {
                     closeConnection(db);
-                    console.error('Error hashing password:', err);
-                    res.status(500).json({ error: 'Error hashing password' });
+                    return res.status(500).json({ error: 'Database update error' });
                 }
+            }
 
-            });
-        } catch (err) {
+            // Close the connection and respond
             closeConnection(db);
-            console.error('Error hashing password:', err);
-            res.status(500).json({ error: 'Error hashing password' });
-        }
-        try {
-
-            const query_price = `SELECT u.user_id,
-            one_weight,
-            two_weight,
-            three_weight,
-            four_weight
-                
-     from Users as u
-              join tastebud.PriceWeights CW on u.user_id = CW.user_id
-              
-     WHERE email =?`;
-
-
-     
-            let score = 20;
-
-
-            db.query(query_price, [email], (err, result) => {
-
-                res=result[0]
-                if (err) {
-                    console.log(err);
-                    res.status(500).json({ error: 'Database query error' });
-                    return;
-                }
-
-                console.log("Success", result);
-                Object.keys(res).forEach((key) => {
-                    console.log('key', key)
-                    console.log('cuisine', cuisine)
-                    if (key != "user_id") {
-
-                        if (price.includes(key)) {
-                            console.log('update')
-                            res[key] = res[key]+score
-                        }
-                        else { res[key]= res[key] - score }
-                    }}); 
-                const update_price = `UPDATE PriceWeights
-                set one_weight=?,
-                two_weight=?,
-                three_weight=?,
-                four_weight=?
-        
-                WHERE user_id=?`
-
-                try {
-
-                    let score = 20;
-
-
-                    db.query(update_price, [res["one_weight"], res["two_weight"], res["three_weight"], res["four_weight"], res["user_id"]]
-
-                        , (err, result) => {
-
-
-                            if (err) {
-                                console.log(err);
-                                res.status(500).json({ error: 'Database query error' });
-                                return;
-                            }
-
-                            console.log("Success", result);
-                        });
-                } catch (err) {
-                    closeConnection(db);
-                    console.error('Error hashing password:', err);
-                    res.status(500).json({ error: 'Error hashing password' });
-                }
-            });
-        } catch (err) {
-            closeConnection(db);
-            console.error('Error hashing password:', err);
-            res.status(500).json({ error: 'Error hashing password' });
-        }
-
-        res.json({ success: true, message: "Update points successfully" });
-    } else {
-        console.log('Missing a parameter');
-        res.status(400).json({ error: 'Missing a parameter' });
+            res.json({ success: true, message: 'Weights updated successfully' });
+        });
+    } catch (err) {
+        closeConnection(db);
+        console.error('Error:', err);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

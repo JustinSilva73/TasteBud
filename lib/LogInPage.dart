@@ -7,6 +7,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+const Color primaryColor = Color(0xFFA30000);
+
+// Customize your theme data
+final ThemeData themeData = ThemeData(
+  primaryColor: primaryColor,
+  buttonTheme: const ButtonThemeData(
+    buttonColor: primaryColor,
+    textTheme: ButtonTextTheme.primary,
+  ),
+  inputDecorationTheme: const InputDecorationTheme(
+    labelStyle: TextStyle(
+      color: Colors.grey, // Color for the label when not focused
+    ),
+    focusedBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFFA30000), width: 2.0),
+    ),
+    floatingLabelStyle: TextStyle(
+      color: Color(0xFFA30000), // Color for the label when focused
+    ),
+  ),
+);
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -166,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
       print("Server responded with status code: ${response.statusCode}. Response: ${response.body}");
 
       print("Failed to fetch restaurants from server");
-      return []; 
+      return [];
     }
   }
 
@@ -206,82 +227,159 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo
-            Image.asset('assets/logo.png', height: 200), // Logo size increased to 200 pixels in height
-            SizedBox(height: 40),
+    bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Theme(
+      data: themeData,
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 0, // Ensures the AppBar takes up no space
+          elevation: 0, // Removes the shadow
+          backgroundColor: primaryColor, // Sets the AppBar's background color to the theme's primary color
+        ),
+        body: SafeArea( // SafeArea is applied here to avoid the status bar
+          top: true,
+          child: Column(
+              children: [
+                // Logo
+                HeaderWidget(
+                  height: isKeyboardOpen ? screenHeight * 0.15 : screenHeight * 0.3 + 20,
+                ),
+                // Username Input
+                const SizedBox(height: 30),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _usernameController,
+                          keyboardType: TextInputType.text,
+                          decoration: const InputDecoration(
+                            labelText: "Username",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
 
-            // Username Input
-            TextField(
-              controller: _usernameController,
-              keyboardType: TextInputType.text,
-              decoration: const InputDecoration(
-                labelText: "Username",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
+                        // Password Input
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: "Password",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        SizedBox(height: 30),
 
-            // Password Input
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
+                        // Login Button
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: primaryColor,
+                            onPrimary: Colors.white,
+                          ),
+                          onPressed: isLoading ? null : () async {
+                            String username = _usernameController.text;
+                            String password = _passwordController.text;
 
-            // Login Button
-            ElevatedButton(
-              onPressed: isLoading ? null : () async {
-                String username = _usernameController.text;
-                String password = _passwordController.text;
+                            if (!isValidPassword(password)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Invalid username or password format')),
+                              );
+                              return;
+                            }
 
-                if (!isValidPassword(password)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Invalid username or password format')),
-                  );
-                  return;
-                }
+                            bool loginSuccess = await _attemptLogin(username, password);
 
-                bool loginSuccess = await _attemptLogin(username, password);
+                            if (loginSuccess) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => MainPage()),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Incorrect login credentials')),
+                              );
+                            }
+                          },
+                          child: Text("Log In"),
+                        ),
 
-                if (loginSuccess) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => MainPage()),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Incorrect login credentials')),
-                  );
-                }
-              },
-              child: Text("Log In"),
-            ),
+                        SizedBox(height: 20),
 
-            SizedBox(height: 20),
-
-            // Create Account Button
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateAccountPage()), // Assumes you have a CreateAccountPage widget
-                );
-              },
-              child: Text("Create an Account"),
-            ),
-          ],
+                        // Create Account Button
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            primary: primaryColor,
+                          ),
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => CreateAccountPage()), // Assumes you have a CreateAccountPage widget
+                            );
+                          },
+                          child: Text("Create an Account"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+          ),
         ),
       ),
     );
   }
+}
+class HeaderWidget extends StatelessWidget {
+  final double height;
+
+  HeaderWidget({required this.height});
+  @override
+  Widget build(BuildContext context) {
+    return ClipPath(
+      clipper: WaveClipper(),
+      child: Container(
+        width: double.infinity, // Forces the container to fill the screen width
+        height: height, // Adjust the height as needed
+        color: primaryColor, // Replace with your desired color or gradient
+        child: Center(
+          child: Image.asset('assets/logo.png'), // Replace with your logo asset path
+        ),
+      ),
+    );
+  }
+}
+// WaveClipper remains the same, as you provided
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = new Path();
+    path.lineTo(0, size.height - 20); // Start from the left bottom corner
+
+    // Create the first wave
+    var firstControlPoint = Offset(size.width / 4, size.height -10);
+    var firstEndPoint = Offset(size.width / 2.25, size.height - 30.0);
+    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
+        firstEndPoint.dx, firstEndPoint.dy);
+
+    // Increase the `dy` value of the control point to push the curve down
+    var secondControlPoint =
+    Offset(size.width - (size.width / 3.25), size.height - 55); // decreased by 10
+    // Decrease the `dy` value of the end point to pull the end of the wave down
+    var secondEndPoint = Offset(size.width, size.height - 50); // increased by 10
+    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
+        secondEndPoint.dx, secondEndPoint.dy);
+
+    // Finish the path by reaching the right bottom corner
+    path.lineTo(size.width, size.height);
+    path.lineTo(size.width, 0.0); // Continue to the top right corner
+    path.close(); // Close the path, going back to the starting point (0,0)
+    return path;
+  }
+
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
