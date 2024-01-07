@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'MainPage.dart';
 import 'RestaurantDetailPage.dart';
+import 'Startup.dart'; // Import the Startup page
 
 class SearchPage extends StatefulWidget {
   final List<Restaurant> allRestaurants; // <-- Define the variable here
@@ -26,7 +27,13 @@ class _SearchPageState extends State<SearchPage> {
       _searchText = text;
     });
   }
-
+  void _signOutAndRestartApp() {
+    // Navigate to the Startup page and remove all routes beneath
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => MyApp()),
+          (Route<dynamic> route) => false,
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final filteredRestaurants = _allRestaurants.where((restaurant) {
@@ -38,33 +45,47 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       body: Column(
         children: [
-          SizedBox(height: 60),
-          Padding(
-            padding: EdgeInsets.fromLTRB(8.0, 0, 8.0, 20.0),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  // The search bar takes all available space to its right
-                  child: TextField(
-                    onChanged: _updateSearchText,
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+          // This Container will cover the entire top area behind the search bar.
+          Container(
+            color: Color(0xFFA30000), // Red background color
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top, // This is for the status bar height
+              bottom: 20, // Space below the search bar
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      onChanged: _updateSearchText,
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        hintStyle: TextStyle(color: Colors.grey[800]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[800]),
                       ),
-                      prefixIcon: const Icon(Icons.search),
                     ),
                   ),
-                ),
-                Container(width: 40),
-                // Replace Spacer with Container, adjust width as needed
-              ],
+                  IconButton(
+                    icon: Icon(Icons.logout, color: Color(0xFFA30000)),
+                    onPressed: _signOutAndRestartApp,
+                    tooltip: 'Sign Out',
+                  ),
+                ],
+              ),
             ),
           ),
+          Container(color: Color(0xFFA30000)),
           Expanded(
             child: ListView.builder(
               itemCount: filteredRestaurants.length,
