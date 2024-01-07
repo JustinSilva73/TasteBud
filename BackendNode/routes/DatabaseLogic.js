@@ -6,9 +6,9 @@ const mysql = require('mysql'); // Use the appropriate database library (e.g., '
 
 // Create a database connection
 const dbConfig = {
-  host: 'tastebud.c711eegjx4h3.us-east-2.rds.amazonaws.com',
-  user: 'admin',
-  password: 'ShowcaseTwenty23',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   database: 'tastebud',
 };
 

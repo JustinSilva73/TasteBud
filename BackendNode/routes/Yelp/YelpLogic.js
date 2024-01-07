@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-const YELP_API_KEY = 'lGDedEU4j67hTkD58rj9kgeL1uKLRtqtX-LZkVZF3aBTJmNVMZfGUasXj7HXaxthZDG3StXwCbAKyjwgv3Huh85tAgnj_60On557Jqvj14HfV53qGMkbhROBCC8oZXYx';
+const YELP_API_KEY = process.env.YELP_API_KEY;
 const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => {
     const options = {
         method: 'GET',

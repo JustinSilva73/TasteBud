@@ -4,7 +4,7 @@ const router = express.Router();
 
 const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 router.get('/restaurants', async (req, res) => {
     const { latitude, longitude } = req.query; 
