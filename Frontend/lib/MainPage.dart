@@ -9,7 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:tastebud/TodayPop.dart';
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -34,7 +34,25 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _initializePositionFuture();
     _initializeData();
+
+    // Show cuisine selection dialog after the build process.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
   }
+
+  void _showTodayPop(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return TodayPop();
+      },
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      isScrollControlled: false, // Set this to true if you want to make full use of the available screen height
+    );
+  }
+
+
 
   void _initializePositionFuture() {
     positionFuture = _determinePosition();
