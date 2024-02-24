@@ -1,7 +1,6 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:tastebud/CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:tastebud/TodayPop.dart';
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -34,6 +33,57 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _initializePositionFuture();
     _initializeData();
+
+    // Show cuisine selection dialog after the build process.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
+  }
+
+  void _showTodayPop(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return TodayPop(
+            onCuisineSelected: (List<String> selectedCuisines) {
+              // Assuming restaurants is your full list of restaurants.
+
+              // Print the list before adding points and sorting.
+              print("Before adding points:");
+              for (var restaurant in restaurants) {
+                print('${restaurant.name}: ${restaurant.totalPoints}');
+              }
+
+              for (var restaurant in restaurants) {
+                // Check if the restaurant's cuisine is in the selected cuisines list.
+                if (selectedCuisines.contains(restaurant.cuisine)) {
+                  // If so, add 50 to its total points. Initialize totalPoints if null.
+                  restaurant.totalPoints = (restaurant.totalPoints ?? 0) + 50;
+                }
+              }
+
+              // Print the list after adding points but before sorting.
+              print("After adding points, before sorting:");
+              for (var restaurant in restaurants) {
+                print('${restaurant.name}: ${restaurant.totalPoints}');
+              }
+
+              // Now sort the restaurants by totalPoints in descending order.
+              List<Restaurant> sortedRestaurants = List.from(restaurants)
+                ..sort((a, b) => (b.totalPoints ?? 0).compareTo(a.totalPoints ?? 0));
+
+              // Print the list after sorting.
+              print("After sorting:");
+              for (var sortedRestaurant in sortedRestaurants) {
+                print('${sortedRestaurant.name}: ${sortedRestaurant.totalPoints}');
+              }
+
+              setState(() {
+                restaurants = sortedRestaurants;
+              });
+            }
+
+        );
+      },
+    );
   }
 
   void _initializePositionFuture() {
@@ -46,9 +96,6 @@ class _MainPageState extends State<MainPage> {
     _loadStoredEmail();
     _loadStoredRestaurants();
   }
-
-
-
 
   _loadStoredEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -375,7 +422,7 @@ class Restaurant {
       icon: json['icon'],
       openingHours: json['opening_hours'] as bool?,
       distance: json['distance']?.toDouble(),
-      totalPoints: null,
+      totalPoints: json['totalPoints']?.toDouble() ?? 0, // Set to 0 if null or not present
     );
   }
   Map<String, dynamic> toJson() {

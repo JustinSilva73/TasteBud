@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tastebud/LogInPage.dart';
-
+import 'package:tastebud/MainPage.dart';
 // The main entry point of the app.
 void main() => runApp(MyApp());
 
@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MainPage',  // The title of the app, used for the task switcher.
+      title: 'TasteBud',  // The title of the app, used for the task switcher.
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
