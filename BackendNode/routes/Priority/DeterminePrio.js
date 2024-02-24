@@ -113,7 +113,8 @@ router.post('/restaurantPrio', async (req, res) => {
         });
 
         console.log("Successful pull from prio");
-        res.json(updatedRestaurants);
+        console.log("Updated Restaurants:", updatedRestaurants);
+        res.json(updatedRestaurants);        
     } catch (error) {
         console.error("Error in /restaurantPrio:", error);
         res.status(500).send("Internal Server Error");
