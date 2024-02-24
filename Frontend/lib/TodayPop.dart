@@ -1,26 +1,27 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tastebud/CuisineTile.dart';
 import 'package:tastebud/QuestionFormat.dart';
+import 'package:http/http.dart' as http;
 
 List<Question> popUpQuestions = [
   Question(
     questionText: "Cuisine Preferences",
-    answers: ["Bum", "American", "Mexican", "Sandwiches"],
-    isMultipleChoice: false
-  ),
-  Question(
-    questionText: "Food Preference",
-    answers: ["Near (<5mi)", "Somewhat Near (5-10mi)", "Far (>10mi)"],
+    answers: [],
     isMultipleChoice: true
-  ),
+  )
 ];
 
 class TodayPop extends StatefulWidget {
-  const TodayPop({super.key});
+  final Function(List<String>) onCuisineSelected; // Callback function declaration
+
+  const TodayPop({super.key, required this.onCuisineSelected});
 
   @override
   _TodayPopState createState() => _TodayPopState();
 }
+
 
 class _TodayPopState extends State<TodayPop> {
   int currentQuestion = 0;
@@ -29,10 +30,57 @@ class _TodayPopState extends State<TodayPop> {
   @override
   void initState() {
     super.initState();
-    //TODO grab the answers for whatever is needed like cuisines
-    // Set initial height based on the first question's number of answers
-    boxHeight = getBoxHeight(popUpQuestions[currentQuestion].answers.length);
+    setCuisineAnswers();
   }
+
+
+
+  _loadStoredEmail() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('storedEmail');
+  }
+
+  Future<int> getUserID() async {
+    String email = await _loadStoredEmail(); // Ensure this returns a non-null, valid email string.
+    final response = await http.get(Uri.parse('http://10.0.2.2:3000/userInfo/user_id/$email'));
+
+    if (response.statusCode == 200) {
+      // Directly parse the response body as an integer.
+      return int.parse(response.body);
+    } else {
+      throw Exception('Failed to load user ID with status code ${response.statusCode}');
+    }
+  }
+
+
+
+  Future<List<String>> fetchTopCuisines(int userId) async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3000/userInfo/top_cuisines/$userId'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      // Assuming the response body is a JSON array of strings
+      return body.map((dynamic item) => item.toString()).toList();
+    } else {
+      throw Exception('Failed to load top cuisines');
+    }
+  }
+  void setCuisineAnswers() async {
+    try {
+      int userID = await getUserID();
+      List<String> cuisines = await fetchTopCuisines(userID);
+      setState(() {
+        popUpQuestions[0].answers = cuisines;
+        boxHeight = getBoxHeight(cuisines.length);
+        print("Cuisines");
+        print(cuisines);
+      });
+    } catch (e) {
+      print('Error fetching top cuisines: $e');
+    }
+  }
+
+
   void _handleAnswerSelection(bool isSelected, int answerIndex) {
     setState(() {
       if (popUpQuestions[currentQuestion].isMultipleChoice) {
@@ -63,6 +111,21 @@ class _TodayPopState extends State<TodayPop> {
         return 200.0; // Default case if there are not 2, 3, or 4 answers
     }
   }
+
+  void addTempVals() {
+    List<String> answersList = []; // Initialize an empty list for the answer strings.
+
+    for (int index in popUpQuestions[currentQuestion].selectedAnswers) {
+      String answer = popUpQuestions[currentQuestion].answers[index];
+      answersList.add(answer);
+    }
+
+    // Use the callback to pass the selected cuisines back.
+    widget.onCuisineSelected(answersList);
+  }
+
+
+
   void _prevQuestion() {
     if (currentQuestion > 0) {
       setState(() {
@@ -81,9 +144,7 @@ class _TodayPopState extends State<TodayPop> {
         boxHeight = getBoxHeight(popUpQuestions[currentQuestion].answers.length);
       });
     } else {
-      // Logic before closing the pop-up
-      // TODO: Insert change temp vals here
-
+        addTempVals();
       // Close the pop-up
       Navigator.of(context).pop();
     }

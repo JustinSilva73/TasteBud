@@ -42,7 +42,7 @@ router.get('/restaurants', async (req, res) => {
                 lat: place.geometry.location.lat,
                 lng: place.geometry.location.lng,
                 rating: place.rating,
-                price_level: place.price_level,
+                price_level: place.price_level === 0 || place.price_level === undefined ? 1 : place.price_level,
                 icon: place.icon,   
                 opening_hours: place.opening_hours ? place.opening_hours.open_now : null
             };
