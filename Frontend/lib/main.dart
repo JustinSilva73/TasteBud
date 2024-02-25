@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:tastebud/LogInPage.dart';
-import 'package:tastebud/MainPage.dart';
+import 'package:tastebud/NotificationService.dart';
+import 'package:timezone/data/latest.dart' as tz;
 // The main entry point of the app.
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  NotificationService().initNotification();
+  tz.initializeTimeZones();
+  runApp(MyApp());
+  NotificationService().scheduleNotification(id: 1, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 7, 0, 0));
+  NotificationService().scheduleNotification(id: 2, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 12, 0, 0));
+  NotificationService().scheduleNotification(id: 3, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 19, 0, 0));
+}
 
 // MyApp is the top-level widget of your application.
 class MyApp extends StatelessWidget {
