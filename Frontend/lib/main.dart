@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tastebud/LogInPage.dart';
 import 'package:tastebud/MainPage.dart';
+import 'package:tastebud/SettingsView.dart';
+
 // The main entry point of the app.
 void main() => runApp(MyApp());
 
@@ -14,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: LoginPage(),  // The default route of the app.
+      home: SettingsView(),  // The default route of the app.
     );
   }
 }
