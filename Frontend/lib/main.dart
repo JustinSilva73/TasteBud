@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: SettingsView(),  // The default route of the app.
+      home: LogInPage(),  // The default route of the app.
     );
   }
 }
