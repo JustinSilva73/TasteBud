@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tastebud/LogInPage.dart';
 import 'package:tastebud/NotificationService.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:tastebud/MainPage.dart';
+import 'package:tastebud/SettingsView.dart';
 // The main entry point of the app.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: LoginPage(),  // The default route of the app.
+      home: LogInPage(),  // The default route of the app.
     );
   }
 }

@@ -4,7 +4,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'MainPage.dart';  // Replace with the path to the file where the Restaurant class is defined.
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:core';
-import 'dart:io';
+import 'dart:async'; // Import the async library for Timer
+import 'package:http/http.dart' as http;
 
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
@@ -15,9 +16,31 @@ class RestaurantDetailPage extends StatefulWidget {
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
 }
 
-class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
+class _RestaurantDetailPageState extends State<RestaurantDetailPage> with SingleTickerProviderStateMixin {
   final double _initialImageHeight = 300;
   double _imageHeight = 300; // Default image height
+  Timer? _likeDebounce; // Timer for debouncing like requests
+  Timer? _dislikeDebounce; // Timer for debouncing dislike requests
+  bool likeButton = false;
+  bool dislikeButton = false;
+  AnimationController? _animationController;
+  Animation<double>? _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(_animationController!);
+  }
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
 
   void _handleVerticalUpdate(DragUpdateDetails details) {
     setState(() {
@@ -65,29 +88,41 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       print('Failed to launch URL: $e');
     }
   }
-/*
-  Future<void> _launchWebsiteUrl(String urlString, {String fallbackSearchQuery = ''}) async {
-    String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
-    String browserFallbackUrl = urlString;  // Regular HTTP/HTTPS URL for fallback
-
-    try {
-      // Try launching the URL with the custom scheme first (for Google Chrome on Android)
-      if (Platform.isAndroid && await canLaunchUrlString(chromeSchemeUrl)) {
-        await launchUrlString(chromeSchemeUrl);
-      }
-      // Fallback to the regular HTTP/HTTPS URL if custom scheme fails or on non-Android platforms
-      else if (await canLaunchUrlString(browserFallbackUrl)) {
-        await launchUrlString(browserFallbackUrl);
-      } else {
-        throw 'Could not launch URL';
-      }
-    } catch (e) {
-      print('Failed to launch URL: $e');
-    }
+  Future<void> _LikedRestaurant() async {
+    if (_likeDebounce?.isActive ?? false) _likeDebounce!.cancel(); // Cancel previous timer if active
+    _likeDebounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() { // This will trigger the UI to rebuild with the new state
+        likeButton = !likeButton;
+        if (likeButton) {
+          _animationController?.forward();
+        } else {
+          _animationController?.reverse();
+        }
+        if (likeButton == true && dislikeButton == true){
+          dislikeButton = false;
+        }
+      });
+      // Replace this comment with your logic to handle a "like" action
+      print("Liked restaurant");
+    });
   }
 
-*/
 
+  Future<void> _DislikedRestaurant() async {
+    if (_dislikeDebounce?.isActive ?? false) _dislikeDebounce!.cancel(); // Cancel previous timer if active
+    _dislikeDebounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() { // This will trigger the UI to rebuild with the new state
+        dislikeButton = !dislikeButton;
+        if (likeButton == true && dislikeButton == true){
+          likeButton = false;
+          _animationController?.reverse();
+        }
+      });
+
+      // Replace this comment with your logic to handle a "dislike" action
+      print("Disliked restaurant");
+    });
+  }
 
   Widget _buildButton(String text, IconData icon, VoidCallback onPressed) {
     return ElevatedButton.icon(
@@ -100,6 +135,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +195,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       children: [
                         Text(
                           widget.restaurant.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 24.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -183,7 +219,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Open Now', // Dynamic value placeholder
                     style: TextStyle(
                       fontSize: 18.0,
@@ -191,10 +227,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       color: Colors.green,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     widget.restaurant.cuisine,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
@@ -228,6 +264,44 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       ),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                      height: 40,// Reduced vertical padding
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black),
+                        borderRadius: BorderRadius.circular(4), // Smaller border radius for less rounded corners
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,// Use the minimum space needed by children
+                        children: [
+                          ScaleTransition(
+                            scale: _scaleAnimation!,
+                            child: IconButton(
+                              icon: Icon(Icons.thumb_up_outlined, size: 18),
+                              color: likeButton ? Color(0xFFA30000) : Theme.of(context).iconTheme.color,
+                              onPressed: () => _LikedRestaurant(),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Container(
+                            height: 30, // Height of the divider
+                            width: 1,
+                            color: Colors.black,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.thumb_down_outlined, size: 18), // Smaller icon size
+                            onPressed: () => _DislikedRestaurant(),
+                            color: dislikeButton ? Color(0xFFA30000) :Theme.of(context).iconTheme.color, // Use theme color when likeButton is false
+                            padding: EdgeInsets.zero, // No padding inside the button
+                            constraints: BoxConstraints(), // Apply constraints to reduce the button size
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
