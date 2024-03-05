@@ -15,6 +15,8 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+*.jar
+*.bin
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -31,6 +33,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+Frontend/build/
 
 # Symbolication related
 app.*.symbols
