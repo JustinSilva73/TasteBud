@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'MainPage.dart';  // Replace with the path to the file where the Restaurant class is defined.
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:core';
 import 'dart:io';
 
@@ -65,7 +66,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       print('Failed to launch URL: $e');
     }
   }
-/*
+
   Future<void> _launchWebsiteUrl(String urlString, {String fallbackSearchQuery = ''}) async {
     String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
     String browserFallbackUrl = urlString;  // Regular HTTP/HTTPS URL for fallback
@@ -86,7 +87,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
   }
 
-*/
+
 
 
   Widget _buildButton(String text, IconData icon, VoidCallback onPressed) {
@@ -225,6 +226,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         'Visit Website',
                         Icons.public,
                             () => launchUrlString(widget.restaurant.url),
+                      ),
+                      _buildButton(
+                        'Share',
+                        Icons.share,
+                            () => Share.share(widget.restaurant.url, subject: 'Check out this restaurant!'),
                       ),
                     ],
                   ),
