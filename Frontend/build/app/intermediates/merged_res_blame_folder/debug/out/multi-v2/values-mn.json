@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.tastebud.app-mergeDebugResources-14:/values-mn/values-mn.xml",
+            "outputFile": "com.example.tastebud.app-mergeDebugResources-15:/values-mn/values-mn.xml",
             "map": [
                 {
                     "source": "C:\\Users\\justi\\.gradle\\caches\\transforms-3\\781e5567158e59d38ee2b89930f9808b\\transformed\\jetified-play-services-base-18.1.0\\res\\values-mn\\values.xml",

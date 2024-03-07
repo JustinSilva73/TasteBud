@@ -1,18 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'LogInPage.dart';
+Future<bool> getNotifications() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('notifications') ?? true; // default to true
+}
+Future<bool> getPopup() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('popups') ?? true; // default to true
+}
+
+Future<bool> getRememberLog() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('rememberLog') ?? true; // default to true
+}
+
+Future<bool> getLocationServ() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('locationServ') ?? true; // default to true
+}
+
 Color? activeColorSwitch = Colors.green[300];
+Future<bool> notificationsOn = getNotifications();
+Future<bool> popUpsOn = getPopup();
+Future<bool> rememberLoginOn = getRememberLog();
+Future<bool> locationServicesOn = getLocationServ();
+
 
 void onTileTap(String tileType) {
   switch (tileType) {
     case 'Email':
-      onEmailTap();
+      EmailTap();
       break;
     case 'Username':
-      onUsernameTap();
+      UsernameTap();
       break;
     case 'Password':
-      onPasswordTap();
+      PasswordTap();
       break;
   }
+}
+
+Future<bool> getPopUpState(){
+  return popUpsOn;
 }
 
 void onSwitchTap(String tileType){
@@ -28,17 +58,81 @@ void onSwitchTap(String tileType){
   }
 }
 
-void onEmailTap() {
+Future<void> saveNotificationsEnabled(bool enabled) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('notifications', enabled);
+}
+
+Future<void> savePopUpEnabled(bool enabled) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('popups', enabled);
+}
+
+Future<void> saveRememberLogEnabled(bool enabled) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('rememberLog', enabled);
+}
+
+Future<void> saveLocationServEnabled(bool enabled) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('locationServ', enabled);
+}
+
+void setNotificationsTap(){
+  saveNotificationsEnabled(notificationsOn as bool);
+}
+
+void setPopupsTap(){
+  savePopUpEnabled(popUpsOn as bool);
+}
+
+void setRemeberLogTap(){
+  saveRememberLogEnabled(rememberLoginOn as bool);
+}
+
+void setLocationServTap(){
+  saveLocationServEnabled(locationServicesOn as bool);
+}
+
+void EmailTap() {
   // Navigate to email settings
 }
 
-void onUsernameTap() {
+void UsernameTap() {
   // Navigate to username settings
 }
 
-void onPasswordTap() {
+void PasswordTap() {
   // Navigate to password settings
 }
+
+Future<void> resetPreferencesToDefaults() async {
+  final prefs = await SharedPreferences.getInstance();
+  // Resetting each preference to its default value
+  await prefs.setBool('notifications', true);
+  await prefs.setBool('popups', true);
+  await prefs.setBool('rememberLog', false);
+  await prefs.setBool('locationServ', false);
+  // Add any other preferences that need to be reset
+}
+
+
+Future<void> clearAllPreferences() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+}
+
+
+void LogoutTap(BuildContext context) async {
+  // Either reset to defaults or clear all preferences
+  await clearAllPreferences();
+  await resetPreferencesToDefaults();
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (context) => LoginPage()), // Assuming LoginPage is your login page class
+        (Route<dynamic> route) => false,
+  );
+}
+
 
 class SettingsView extends StatefulWidget {
   @override
@@ -46,10 +140,6 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  bool notificationsOn = false;
-  bool popUpsOn = false;
-  bool rememberLoginOn = false;
-  bool locationServicesOn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -98,66 +188,104 @@ class _SettingsViewState extends State<SettingsView> {
           CategoryGroup(
             title: 'App Settings',
             children: [
-              ListTileTheme(
-                dense: true,
-                  child: SwitchListTile(
-                    title: Text('Notifications',style:TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.notifications),
-                    value: notificationsOn,
-                    activeTrackColor: activeColorSwitch, // This sets the track to a lighter green when the switch is on.
-                    onChanged: (newValue) {
-                      setState(() {
-                        notificationsOn = newValue;
-                      });
-                      onSwitchTap('Notifications');
-                    },
-                  ),
+              FutureBuilder<bool>(
+                future: getNotifications(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SwitchListTile(
+                      title: Text('Notifications',style: TextStyle(fontSize: 15)),
+                      secondary: Icon(Icons.notifications),
+                      value: true, // Default value while waiting
+                      activeTrackColor: activeColorSwitch,
+                      onChanged: null, // Disable the switch while loading
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return SwitchListTile(
+                      title: Text('Notifications',style: TextStyle(fontSize: 15)),
+                      secondary: Icon(Icons.notifications),
+                      value: snapshot.data ?? true, // Default value if null
+                      activeTrackColor: activeColorSwitch,
+                      onChanged: (newValue) {
+                        setState(() {
+                          notificationsOn = Future.value(newValue); // Update the future value
+                        });
+                        onSwitchTap('Notifications');
+                      },
+                    );
+                  }
+                },
               ),
-              ListTileTheme(
-                dense: true,
-                  child: SwitchListTile(
-                    title: Text('Pop-ups', style:TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.podcasts_outlined),
-                    value: popUpsOn,
-                    activeColor: activeColorSwitch,
-                    onChanged: (newValue) {
-                      setState(() {
-                        popUpsOn = newValue;
-                      });
-                      onSwitchTap('Pop-ups');
-                    },
-                  ),
+              FutureBuilder<bool>(
+                future: getPopup(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // or some placeholder
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return SwitchListTile(
+                      title: Text('Pop-ups', style: TextStyle(fontSize: 15)),
+                      secondary: Icon(Icons.podcasts_outlined),
+                      value: snapshot.data ?? true,
+                      activeColor: activeColorSwitch,
+                      onChanged: (newValue) {
+                        setState(() {
+                          popUpsOn = newValue as Future<bool>;
+                        });
+                        onSwitchTap('Pop-ups');
+                      },
+                    );
+                  }
+                },
               ),
-              ListTileTheme(
-                dense: true,
-                  child: SwitchListTile(
-                    title: Text('Remember Log in', style:TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.login_sharp),
-                    value: rememberLoginOn,
-                    activeColor: activeColorSwitch,
-                    onChanged: (newValue) {
-                      setState(() {
-                        rememberLoginOn = newValue;
-                      });
-                      onSwitchTap('Remember Log in');
-                    },
-                  ),
+              FutureBuilder<bool>(
+                future: getRememberLog(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // or some placeholder
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return SwitchListTile(
+                      title: Text('Remember Log in', style: TextStyle(fontSize: 15)),
+                      secondary: Icon(Icons.login_sharp),
+                      value: snapshot.data ?? true,
+                      activeColor: activeColorSwitch,
+                      onChanged: (newValue) {
+                        setState(() {
+                          rememberLoginOn = newValue as Future<bool>;
+                        });
+                        onSwitchTap('Remember Log in');
+                      },
+                    );
+                  }
+                },
               ),
-              ListTileTheme(
-                dense: true,
-                  child: SwitchListTile(
-                    title: Text('Location Services', style:TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.location_disabled),
-                    value: locationServicesOn,
-                    activeColor: activeColorSwitch,
-                    onChanged: (newValue) {
-                      setState(() {
-                        locationServicesOn = newValue;
-                      });
-                      onSwitchTap('Location Services');
-                    },
-                  ),
-              ),
+              FutureBuilder<bool>(
+                future: getLocationServ(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // or some placeholder
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return SwitchListTile(
+                      title: Text('Location Services', style: TextStyle(fontSize: 15)),
+                      secondary: Icon(Icons.location_disabled),
+                      value: snapshot.data ?? true,
+                      activeColor: activeColorSwitch,
+                      onChanged: (newValue) {
+                        setState(() {
+                          locationServicesOn = newValue as Future<bool>;
+                        });
+                        onSwitchTap('Location Services');
+                      },
+                    );
+                  }
+                },
+              )
             ],
           ),
           CategoryGroup(
@@ -174,7 +302,7 @@ class _SettingsViewState extends State<SettingsView> {
                         Icons.logout,
                         color: Color(0xFFFF0000), // Custom red color using hexadecimal color code.
                       ),
-                      onTap: () {},
+                      onTap: () => LogoutTap(context),
                     ),
                 )
               ]
