@@ -4,15 +4,31 @@ import 'package:tastebud/NotificationService.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:tastebud/MainPage.dart';
 import 'package:tastebud/SettingsView.dart';
+import 'SettingsCheckControl.dart';
 // The main entry point of the app.
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   NotificationService().initNotification();
   tz.initializeTimeZones();
+  await SettingsCheckControl.checkAndSetDefaults(); // Check settings and set defaults if necessary
+  NotificationService notificationService = NotificationService();
+  bool notificationsEnabled = await notificationService.getNotificationsEnabled();
+  if(notificationsEnabled) {
+    NotificationService().scheduleNotification(id: 1,
+        title: 'TasteBud',
+        body: 'Hey its time to eat',
+        dateTime: DateTime(2099, 1, 1, 7, 0, 0));
+    NotificationService().scheduleNotification(id: 2,
+        title: 'TasteBud',
+        body: 'Hey its time to eat',
+        dateTime: DateTime(2099, 1, 1, 12, 0, 0));
+    NotificationService().scheduleNotification(id: 3,
+        title: 'TasteBud',
+        body: 'Hey its time to eat',
+        dateTime: DateTime(2099, 1, 1, 17, 0, 0));
+  }
   runApp(MyApp());
-  NotificationService().scheduleNotification(id: 1, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 7, 0, 0));
-  NotificationService().scheduleNotification(id: 2, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 12, 0, 0));
-  NotificationService().scheduleNotification(id: 3, title: 'TasteBud', body: 'Hey its time to eat', dateTime: DateTime(2099, 1, 1, 19, 0, 0));
+
 }
 
 // MyApp is the top-level widget of your application.
@@ -25,7 +41,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: LogInPage(),  // The default route of the app.
+      home: LoginPage(),  // The default route of the app.
     );
   }
 }

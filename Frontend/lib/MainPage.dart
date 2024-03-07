@@ -1,6 +1,5 @@
-
-
 import 'package:flutter/material.dart';
+import 'package:tastebud/SettingsView.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,14 +28,25 @@ class _MainPageState extends State<MainPage> {
   final double maxDistance = 14000; // 5 kilometers in meters
 
   @override
+  @override
   void initState() {
     super.initState();
     _initializePositionFuture();
     _initializeData();
-
-    // Show cuisine selection dialog after the build process.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
   }
+
+  void _initializeData() async {
+    await _loadPositionFromStorage();
+    _initializePositionFuture();
+    _loadStoredEmail();
+    _loadStoredRestaurants();
+
+    if (await getPopUpState()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) =>
+          _showTodayPop(context));
+    }
+  }
+
 
   void _showTodayPop(BuildContext context) {
     showModalBottomSheet(
@@ -88,13 +98,6 @@ class _MainPageState extends State<MainPage> {
 
   void _initializePositionFuture() {
     positionFuture = _determinePosition();
-  }
-
-  _initializeData() async {
-    await _loadPositionFromStorage();
-    _initializePositionFuture();
-    _loadStoredEmail();
-    _loadStoredRestaurants();
   }
 
   _loadStoredEmail() async {

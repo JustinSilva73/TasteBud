@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.tastebud.app-mergeDebugResources-14:/values-night-v8/values-night-v8.xml",
+            "outputFile": "com.example.tastebud.app-mergeDebugResources-15:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
                     "source": "C:\\Users\\justi\\Projects\\tastebud\\Frontend\\android\\app\\src\\main\\res\\values-night\\styles.xml",
