@@ -10,7 +10,7 @@ import 'dart:io';
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  RestaurantDetailPage({required this.restaurant});
+  const RestaurantDetailPage({super.key, required this.restaurant});
 
   @override
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
@@ -67,7 +67,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
   }
 
-  Future<void> _launchWebsiteUrl(String urlString, {String fallbackSearchQuery = ''}) async {
+  Future<void> _launchWebsiteUrl(String urlString) async {
     String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
     String browserFallbackUrl = urlString;  // Regular HTTP/HTTPS URL for fallback
 
@@ -96,7 +96,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       label: Text(text),
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFFA30000), // Updated property for button color
+        backgroundColor: const Color(0xFFA30000), // Updated property for button color
         foregroundColor: Colors.white, // Updated property for text color
       ),
     );
@@ -115,7 +115,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               child: Stack(
                 children: [
                   AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                     width: double.infinity,
                     height: _imageHeight,
@@ -128,7 +128,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     top: 40, // Adjust the position as needed
                     left: 2,
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -160,7 +160,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       children: [
                         Text(
                           widget.restaurant.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 24.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -184,7 +184,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Open Now', // Dynamic value placeholder
                     style: TextStyle(
                       fontSize: 18.0,
@@ -192,28 +192,28 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       color: Colors.green,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     widget.restaurant.cuisine,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     priceLevelToString(widget.restaurant.priceLevel),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     '${widget.restaurant.distance?.toString() ?? 'Unknown'} miles away',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 16.0),
+                  const SizedBox(height: 16.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
