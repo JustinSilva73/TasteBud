@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
+import 'package:tastebud/SettingsPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -120,7 +121,7 @@ class _MainPageState extends State<MainPage> {
         }
       }
 
-      _setRestaurantMarkers(restaurants);  // Set markers based on the potentially updated restaurants list.
+      //_setRestaurantMarkers(restaurants);  // Set markers based on the potentially updated restaurants list.
     }
   }
 
@@ -294,15 +295,15 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFA30000), // Sets the background color of the AppBar
-        title: Text(
+        backgroundColor: const Color(0xFFA30000), // Sets the background color of the AppBar
+        title: const Text(
           "Restaurant",
           style: TextStyle(color: Colors.white), // Sets the title text color
         ),
-        iconTheme: IconThemeData(color: Colors.white), // Sets the icon color
+        iconTheme: const IconThemeData(color: Colors.white), // Sets the icon color
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => SearchPage(allRestaurants: restaurants),
@@ -311,7 +312,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
+          preferredSize: const Size.fromHeight(4.0),
           child: Container(
             color: Colors.black,
             height: 0.5, // Thickness of the bottom border
@@ -370,6 +371,45 @@ class _MainPageState extends State<MainPage> {
                 return RestaurantItem(restaurant: restaurants[index]);
               },
             ),
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // You can set the initial index as needed
+        onTap: (index) {
+          switch (index) {
+            case 0:
+            // Navigate to the current page (MainPage)
+              break;
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage()),
+              );
+              break;
+            case 2:
+            // Navigate to the SearchPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchPage(allRestaurants: restaurants)),
+              );
+              break;
+          }
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
           ),
         ],
       ),
@@ -440,6 +480,19 @@ class Restaurant {
       'opening_hours': openingHours,
       'distance': distance,
       'totalPoints': totalPoints,    };
+  }
+}
+class SettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings'),
+      ),
+      body: Center(
+        child: Text('Settings Page Content'),
+      ),
+    );
   }
 }
 

@@ -7,7 +7,7 @@ class SearchPage extends StatefulWidget {
   final List<Restaurant> allRestaurants; // <-- Define the variable here
 
   // Modify the constructor to accept the named parameter
-  SearchPage({required this.allRestaurants});
+  const SearchPage({super.key, required this.allRestaurants});
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -30,7 +30,7 @@ class _SearchPageState extends State<SearchPage> {
   void _signOutAndRestartApp() {
     // Navigate to the Startup page and remove all routes beneath
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => MyApp()),
+      MaterialPageRoute(builder: (context) => const MyApp()),
           (Route<dynamic> route) => false,
     );
   }
@@ -47,17 +47,17 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           // This Container will cover the entire top area behind the search bar.
           Container(
-            color: Color(0xFFA30000), // Red background color
+            color: const Color(0xFFA30000), // Red background color
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).padding.top, // This is for the status bar height
               bottom: 20, // Space below the search bar
             ),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Expanded(
@@ -77,7 +77,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.logout, color: Color(0xFFA30000)),
+                    icon: const Icon(Icons.logout, color: Color(0xFFA30000)),
                     onPressed: _signOutAndRestartApp,
                     tooltip: 'Sign Out',
                   ),
@@ -85,7 +85,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ),
-          Container(color: Color(0xFFA30000)),
+          Container(color: const Color(0xFFA30000)),
           Expanded(
             child: ListView.builder(
               itemCount: filteredRestaurants.length,
@@ -108,7 +108,7 @@ class _SearchPageState extends State<SearchPage> {
                   child: Column(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.only(
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(10.0),
                           topRight: Radius.circular(10.0),
                         ),
@@ -124,7 +124,7 @@ class _SearchPageState extends State<SearchPage> {
                           child: Text(
                             restaurant.name,
                             textAlign: TextAlign.center, // Center the text horizontally
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20.0,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
