@@ -1,6 +1,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:tastebud/SettingsPage.dart';
@@ -294,28 +295,23 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFA30000), // Sets the background color of the AppBar
-        title: const Text(
-          "Restaurant",
-          style: TextStyle(color: Colors.white), // Sets the title text color
-        ),
-        iconTheme: const IconThemeData(color: Colors.white), // Sets the icon color
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => SearchPage(allRestaurants: restaurants),
-              ));
-            },
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(56.0),
+        child: AppBar(
+          backgroundColor: const Color(0xFFA30000),
+          iconTheme: const IconThemeData(color: Colors.white),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4.0),
+            child: Container(
+              color: Colors.black,
+              height: 0.5,
+            ),
           ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4.0),
-          child: Container(
-            color: Colors.black,
-            height: 0.5, // Thickness of the bottom border
+          title: Center(
+            child: Image.asset(
+              'assets/logo.png', // Replace with the correct path for your logo asset
+              height: 60, // Adjust the height as needed
+            ),
           ),
         ),
       ),
@@ -491,6 +487,23 @@ class SettingsPage extends StatelessWidget {
       ),
       body: Center(
         child: Text('Settings Page Content'),
+      ),
+    );
+  }
+}
+class HeaderWidget extends StatelessWidget {
+  final double height;
+
+  const HeaderWidget({super.key, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: height,
+      color: primaryColor, // Replace with your desired color or gradient
+      child: Center(
+        child: Image.asset('assets/logo.png'), // Replace with your logo asset path
       ),
     );
   }
