@@ -22,11 +22,13 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _allRestaurants = widget.allRestaurants; // Use the variable from the widget
   }
+
   void _updateSearchText(String text) {
     setState(() {
       _searchText = text;
     });
   }
+
   void _signOutAndRestartApp() {
     // Navigate to the Startup page and remove all routes beneath
     Navigator.of(context).pushAndRemoveUntil(
@@ -34,6 +36,7 @@ class _SearchPageState extends State<SearchPage> {
           (Route<dynamic> route) => false,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final filteredRestaurants = _allRestaurants.where((restaurant) {
@@ -92,63 +95,106 @@ class _SearchPageState extends State<SearchPage> {
               itemBuilder: (context, index) {
                 var restaurant = filteredRestaurants[index];
                 return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => RestaurantDetailPage(restaurant: restaurant),
-                        ),
-                      );
-                    },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    side: const BorderSide(color: Colors.black, width: 1.0), // Add this line
-                  ),
-
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(10.0),
-                          topRight: Radius.circular(10.0),
-                        ),
-                        child: Image.network(
-                          restaurant.imageUrl,
-                          fit: BoxFit.cover,
-                          height: 200.0,
-                          width: double.infinity,
-                        ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            RestaurantDetailPage(restaurant: restaurant),
                       ),
-                      ListTile(
-                        title: Center( // Center widget used here for horizontal centering
-                          child: Text(
-                            restaurant.name,
-                            textAlign: TextAlign.center, // Center the text horizontally
-                            style: const TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                    );
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: const BorderSide(
+                          color: Colors.black, width: 1.0), // Add this line
+                    ),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(10.0),
+                            topRight: Radius.circular(10.0),
+                          ),
+                          child: Image.network(
+                            restaurant.imageUrl,
+                            fit: BoxFit.cover,
+                            height: 200.0,
+                            width: double.infinity,
+                          ),
+                        ),
+                        ListTile(
+                          title: Center(
+                            // Center widget used here for horizontal centering
+                            child: Text(
+                              restaurant.name,
+                              textAlign: TextAlign.center,
+                              // Center the text horizontally
+                              style: const TextStyle(
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          subtitle: Center(
+                            // Center widget used here for horizontal centering
+                            child: Text(
+                              '${restaurant.cuisine} - ${restaurant.distance?.toStringAsFixed(1)} mi',
+                              textAlign: TextAlign.center,
+                              // Center the text horizontally
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ),
                         ),
-                        subtitle: Center( // Center widget used here for horizontal centering
-                          child: Text(
-                            '${restaurant.cuisine} - ${restaurant.distance?.toStringAsFixed(1)} mi',
-                            textAlign: TextAlign.center, // Center the text horizontally
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 );
               },
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // You can set the initial index as needed
+        onTap: (index) {
+          switch (index) {
+            case 0:
+            // Navigate to the current page (SearchPage)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainPage()),
+              );
+              break;
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+              break;
+            case 2:
+            // Navigate to the MainPage
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
           ),
         ],
       ),

@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:core';
 import 'dart:io';
 
+import 'Search.dart';
+
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
 
@@ -145,7 +147,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.8), // Opaque black
+                            Colors.black.withOpacity(
+                                0.8), // Opaque black
                             Colors.transparent, // Fully transparent
                           ],
                         ),
@@ -225,12 +228,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       _buildButton(
                         'Visit Website',
                         Icons.public,
-                            () => launchUrlString(widget.restaurant.url),
+                            () => _launchWebsiteUrl(widget.restaurant.url),
                       ),
                       _buildButton(
                         'Share',
                         Icons.share,
-                            () => Share.share(widget.restaurant.url, subject: 'Check out this restaurant!'),
+                            () => Share.share(
+                            widget.restaurant.url,
+                            subject:
+                            'Check out this restaurant!'),
                       ),
                     ],
                   ),
@@ -239,6 +245,47 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // You can set the initial index as needed
+        onTap: (index) {
+          switch (index) {
+            case 0:
+            // Navigate to the Main Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainPage()),
+              );
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+              break;
+            case 2:
+            // Navigate to the SearchPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage(allRestaurants: [])), // Update with your list of restaurants
+              );
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+        ],
       ),
     );
   }

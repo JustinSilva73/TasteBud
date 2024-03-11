@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
-import 'package:tastebud/SettingsPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -296,7 +295,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(56.0),
+        preferredSize: const Size.fromHeight(56.0),
         child: AppBar(
           backgroundColor: const Color(0xFFA30000),
           iconTheme: const IconThemeData(color: Colors.white),
@@ -382,7 +381,7 @@ class _MainPageState extends State<MainPage> {
             // Navigate to the SettingsPage
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
               break;
             case 2:
@@ -394,7 +393,7 @@ class _MainPageState extends State<MainPage> {
               break;
           }
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -479,13 +478,15 @@ class Restaurant {
   }
 }
 class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: const Text('Settings'),
       ),
-      body: Center(
+      body: const Center(
         child: Text('Settings Page Content'),
       ),
     );
@@ -510,41 +511,107 @@ class HeaderWidget extends StatelessWidget {
 }
 
 
-// Stateless widget to represent a single restaurant item.
 class RestaurantItem extends StatelessWidget {
   final Restaurant restaurant;
 
-  // Constructor to initialize the RestaurantItem widget with a Restaurant object.
-  const RestaurantItem({super.key, required this.restaurant});
+  const RestaurantItem({Key? key, required this.restaurant}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(4.0),  // Outer spacing for the card.
-      elevation: 0.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5.0),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.white,  // Set white background
-          child: Image.network(
-            restaurant.icon,  // Assuming 'icon' is a URL to the restaurant's icon image.
-            width: 40,  // Set the desired width
-            height: 40,  // Set the desired height
-            color: Colors.red,  // Set the desired accent color
-          ),
+      child: ExpansionTile(
+        title: Row(
+          children: [
+            const Icon(Icons.restaurant, color: Colors.red), // Set color for the icon
+            const SizedBox(width: 8.0),
+            Text(restaurant.name),
+          ],
         ),
-        title: Text(restaurant.name),  // Display the restaurant's name.
-        subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RestaurantDetailPage(restaurant: restaurant),
+        subtitle: Text(restaurant.address),
+        trailing: const Icon(Icons.keyboard_arrow_down, color: Colors.red),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Image.network(
+                      restaurant.imageUrl, // Use the actual field containing the image URL
+                      width: 80, // Adjust the width as needed
+                      height: 80, // Adjust the height as needed
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.local_dining, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Cuisine: ${restaurant.cuisine}', style: const TextStyle(fontSize: 12.0)),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          const Icon(Icons.attach_money, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Price: ${restaurant.priceLevel}', style: const TextStyle(fontSize: 12.0)),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          const Icon(Icons.directions, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Distance: ${restaurant.distance?.toString() ?? 'Unknown'} miles', style: const TextStyle(fontSize: 12.0)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => RestaurantDetailPage(restaurant: restaurant)),
+                          );
+                        },
+                        child: const Text('More Info', style: TextStyle(fontSize: 12.0)),
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    SizedBox(
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _showOnMapPressed(context);
+                        },
+                        child: const Text('Display on Map', style: TextStyle(fontSize: 10.0)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
+  }
+
+
+  void _showOnMapPressed(BuildContext context) {
   }
 }
