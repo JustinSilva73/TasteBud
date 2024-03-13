@@ -3,14 +3,17 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'MainPage.dart';  // Replace with the path to the file where the Restaurant class is defined.
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:core';
 import 'dart:async'; // Import the async library for Timer
 import 'package:http/http.dart' as http;
 
+import 'Search.dart';
+
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  RestaurantDetailPage({required this.restaurant});
+  const RestaurantDetailPage({super.key, required this.restaurant});
 
   @override
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
@@ -107,6 +110,25 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
     });
   }
 
+  Future<void> _launchWebsiteUrl(String urlString) async {
+    String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
+    String browserFallbackUrl = urlString;  // Regular HTTP/HTTPS URL for fallback
+
+    try {
+      // Try launching the URL with the custom scheme first (for Google Chrome on Android)
+      if (Platform.isAndroid && await canLaunchUrlString(chromeSchemeUrl)) {
+        await launchUrlString(chromeSchemeUrl);
+      }
+      // Fallback to the regular HTTP/HTTPS URL if custom scheme fails or on non-Android platforms
+      else if (await canLaunchUrlString(browserFallbackUrl)) {
+        await launchUrlString(browserFallbackUrl);
+      } else {
+        throw 'Could not launch URL';
+      }
+    } catch (e) {
+      print('Failed to launch URL: $e');
+    }
+  }
 
   Future<void> _DislikedRestaurant() async {
     if (_dislikeDebounce?.isActive ?? false) _dislikeDebounce!.cancel(); // Cancel previous timer if active
@@ -130,7 +152,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
       label: Text(text),
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFFA30000), // Updated property for button color
+        backgroundColor: const Color(0xFFA30000), // Updated property for button color
         foregroundColor: Colors.white, // Updated property for text color
       ),
     );
@@ -150,7 +172,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
               child: Stack(
                 children: [
                   AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                     width: double.infinity,
                     height: _imageHeight,
@@ -163,7 +185,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                     top: 40, // Adjust the position as needed
                     left: 2,
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -180,7 +202,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.8), // Opaque black
+                            Colors.black.withOpacity(
+                                0.8), // Opaque black
                             Colors.transparent, // Fully transparent
                           ],
                         ),
@@ -234,21 +257,21 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     priceLevelToString(widget.restaurant.priceLevel),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     '${widget.restaurant.distance?.toString() ?? 'Unknown'} miles away',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                     ),
                   ),
-                  SizedBox(height: 16.0),
+                  const SizedBox(height: 16.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -260,7 +283,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                       _buildButton(
                         'Visit Website',
                         Icons.public,
-                            () => launchUrlString(widget.restaurant.url),
+                            () => _launchWebsiteUrl(widget.restaurant.url),
+                      ),
+                      _buildButton(
+                        'Share',
+                        Icons.share,
+                            () => Share.share(
+                            widget.restaurant.url,
+                            subject:
+                            'Check out this restaurant!'),
                       ),
                     ],
                   ),
@@ -307,6 +338,47 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // You can set the initial index as needed
+        onTap: (index) {
+          switch (index) {
+            case 0:
+            // Navigate to the Main Page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainPage()),
+              );
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+              break;
+            case 2:
+            // Navigate to the SearchPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage(allRestaurants: [])), // Update with your list of restaurants
+              );
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+        ],
       ),
     );
   }
