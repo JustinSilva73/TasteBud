@@ -1,4 +1,0 @@
-#Wed Mar 06 17:13:22 EST 2024
-base.0=C\:\\Users\\justi\\Projects\\tastebud\\Frontend\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
-renamed.0=classes.dex
-path.0=classes.dex
