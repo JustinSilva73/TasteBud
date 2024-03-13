@@ -37,6 +37,8 @@ List<Question> surveyQuestions = [
 ];
 
 class SurveyPage extends StatefulWidget {
+  const SurveyPage({super.key});
+
   @override
   _SurveyPageState createState() => _SurveyPageState();
 }
@@ -109,7 +111,7 @@ class _SurveyPageState extends State<SurveyPage> {
       // Navigate to the MainPage or handle success
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => MainPage()),
+        MaterialPageRoute(builder: (context) => const MainPage()),
             (Route<dynamic> route) => false,
       );
     } else {
@@ -291,7 +293,7 @@ class _SurveyPageState extends State<SurveyPage> {
                       textAlign: TextAlign.center,
                     ),
                     Container(
-                      margin: EdgeInsets.only(top: 10), // Margin above the text
+                      margin: const EdgeInsets.only(top: 10), // Margin above the text
                       height: 2,
                       color: Colors.black, // Border color
                     ),
@@ -324,9 +326,9 @@ class _SurveyPageState extends State<SurveyPage> {
                       }),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: question.selectedAnswers.contains(index) ? Color(0xFF3D0000) : Color(0xFFA30000),
+                          color: question.selectedAnswers.contains(index) ? const Color(0xFF3D0000) : const Color(0xFFA30000),
                           border: Border.all(
-                            color: Color(0xFFA30000), // Red as the border color
+                            color: const Color(0xFFA30000), // Red as the border color
                             width: 2,
                           ),
                           borderRadius: BorderRadius.circular(15),
@@ -335,7 +337,7 @@ class _SurveyPageState extends State<SurveyPage> {
                               color: Colors.black.withOpacity(0.2), // Adjust color opacity for shadow intensity
                               spreadRadius: 1,
                               blurRadius: 4,
-                              offset: Offset(2, 2), // Changes position of shadow
+                              offset: const Offset(2, 2), // Changes position of shadow
                             ),
                           ],
                         ),
@@ -352,7 +354,7 @@ class _SurveyPageState extends State<SurveyPage> {
                   },
                   padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                 ),
               ),
             ),
@@ -372,7 +374,7 @@ class _SurveyPageState extends State<SurveyPage> {
                       });
                       _controller.animateToPage(
                         _currentPage,
-                        duration: Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 300),
                         curve: Curves.easeIn,
                       );
                     } else {
@@ -386,7 +388,7 @@ class _SurveyPageState extends State<SurveyPage> {
                       questionIndex < questions.length - 1 ? "Next" : "Submit",
                       style: TextStyle(
                         fontSize: 24,
-                        color: question.isAnswerSelected ? Color(0xFFA30000) : Colors.transparent, // Use transparent color when inactive
+                        color: question.isAnswerSelected ? const Color(0xFFA30000) : Colors.transparent, // Use transparent color when inactive
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,

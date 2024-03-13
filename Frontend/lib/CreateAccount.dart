@@ -28,6 +28,8 @@ final ThemeData themeData = ThemeData(
 );
 
 class CreateAccountPage extends StatefulWidget {
+  const CreateAccountPage({super.key});
+
   @override
   _CreateAccountPageState createState() => _CreateAccountPageState();
 }
@@ -53,13 +55,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
 
   bool isValidEmail(String email) {
-    final pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
+    const pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
     final regExp = RegExp(pattern);
     return regExp.hasMatch(email);
   }
 
   bool isValidPassword(String password) {
-    final pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    const pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
     final regExp = RegExp(pattern);
 
     return regExp.hasMatch(password);
@@ -163,7 +165,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         ),
                       ),
                     ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -182,7 +184,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _passwordController,
                   keyboardType: TextInputType.visiblePassword, // Appropriate for passwords
@@ -203,12 +205,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: primaryColor, // This is the background color of the button
-                    onPrimary: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    foregroundColor: Colors.white, backgroundColor: primaryColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -221,21 +222,21 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
                   if (!isValidEmail(email)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please enter a valid email!')),
+                      const SnackBar(content: Text('Please enter a valid email!')),
                     );
                     return;
                   }
 
                   if (!isValidPassword(password)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Password should be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character!')),
+                      const SnackBar(content: Text('Password should be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character!')),
                     );
                     return;
                   }
 
                   if (username.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please fill in all fields!')),
+                      const SnackBar(content: Text('Please fill in all fields!')),
                     );
                     return;
                   }
@@ -258,27 +259,27 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     await _saveEmailToStorage(email);
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => SurveyPage()),
+                      MaterialPageRoute(builder: (context) => const SurveyPage()),
                     );
                   }
                 },
-                child: Text(
+                child: const Text(
                   "Create Account",
                   style: TextStyle(fontSize: 18),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextButton(
                 style: TextButton.styleFrom(
-                  primary: primaryColor,
+                  foregroundColor: primaryColor,
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 },
-                child: Text("Log In"),
+                child: const Text("Log In"),
                 ),
                   ],
                 ),
@@ -294,7 +295,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 class HeaderWidget extends StatelessWidget {
   final double height;
 
-  HeaderWidget({required this.height});
+  const HeaderWidget({super.key, required this.height});
   @override
   Widget build(BuildContext context) {
     return ClipPath(
@@ -316,7 +317,7 @@ class HeaderWidget extends StatelessWidget {
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    var path = new Path();
+    var path = Path();
     path.lineTo(0, size.height - 20); // Start from the left bottom corner
 
     // Create the first wave
