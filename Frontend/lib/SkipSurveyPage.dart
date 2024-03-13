@@ -4,6 +4,8 @@ import 'package:tastebud/MainPage.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 
 class SkipSurveyPage extends StatefulWidget {
+  const SkipSurveyPage({super.key});
+
   @override
   _SkipSurveyPageState createState() => _SkipSurveyPageState();
 }
@@ -23,7 +25,7 @@ class _SkipSurveyPageState extends State<SkipSurveyPage> {
         spinButtonVisible = false; // Hide the spin button
       });
       // You need some logic to wait until the wheel stops, before showing the dialog
-      Future.delayed(Duration(seconds: 5), () {
+      Future.delayed(const Duration(seconds: 5), () {
         _showResultDialog();
       });
     });
@@ -37,7 +39,7 @@ class _SkipSurveyPageState extends State<SkipSurveyPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            '${items[selectedValue]}',
+            items[selectedValue],
             style: const TextStyle(
               fontSize: 24.0, // Set the font size as per your requirement
               fontWeight: FontWeight.bold, // Make the font weight bold
@@ -49,9 +51,9 @@ class _SkipSurveyPageState extends State<SkipSurveyPage> {
                 Navigator.of(context).pop(); // Close the dialog
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => MainPage()),
+                  MaterialPageRoute(builder: (context) => const MainPage()),
                 );              },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -80,7 +82,7 @@ class _SkipSurveyPageState extends State<SkipSurveyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Spinner Wheel'),
+          title: const Text('Spinner Wheel'),
         ),
         body: Column(
           children: [
@@ -168,7 +170,7 @@ class _SkipSurveyPageState extends State<SkipSurveyPage> {
                 onPressed: () {
                   controller.add(Fortune.randomInt(0, items.length));
                 },
-                child: Text('SPIN'),
+                child: const Text('SPIN'),
               ),
           ],
         ),
