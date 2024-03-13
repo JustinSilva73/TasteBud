@@ -7,7 +7,7 @@ class SearchPage extends StatefulWidget {
   final List<Restaurant> allRestaurants; // <-- Define the variable here
 
   // Modify the constructor to accept the named parameter
-  SearchPage({required this.allRestaurants});
+  const SearchPage({super.key, required this.allRestaurants});
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -22,18 +22,21 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _allRestaurants = widget.allRestaurants; // Use the variable from the widget
   }
+
   void _updateSearchText(String text) {
     setState(() {
       _searchText = text;
     });
   }
+
   void _signOutAndRestartApp() {
     // Navigate to the Startup page and remove all routes beneath
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => MyApp()),
+      MaterialPageRoute(builder: (context) => const MyApp()),
           (Route<dynamic> route) => false,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final filteredRestaurants = _allRestaurants.where((restaurant) {
@@ -47,17 +50,17 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           // This Container will cover the entire top area behind the search bar.
           Container(
-            color: Color(0xFFA30000), // Red background color
+            color: const Color(0xFFA30000), // Red background color
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).padding.top, // This is for the status bar height
               bottom: 20, // Space below the search bar
             ),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Expanded(
@@ -77,7 +80,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.logout, color: Color(0xFFA30000)),
+                    icon: const Icon(Icons.logout, color: Color(0xFFA30000)),
                     onPressed: _signOutAndRestartApp,
                     tooltip: 'Sign Out',
                   ),
@@ -85,70 +88,113 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ),
-          Container(color: Color(0xFFA30000)),
+          Container(color: const Color(0xFFA30000)),
           Expanded(
             child: ListView.builder(
               itemCount: filteredRestaurants.length,
               itemBuilder: (context, index) {
                 var restaurant = filteredRestaurants[index];
                 return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => RestaurantDetailPage(restaurant: restaurant),
-                        ),
-                      );
-                    },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    side: const BorderSide(color: Colors.black, width: 1.0), // Add this line
-                  ),
-
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10.0),
-                          topRight: Radius.circular(10.0),
-                        ),
-                        child: Image.network(
-                          restaurant.imageUrl,
-                          fit: BoxFit.cover,
-                          height: 200.0,
-                          width: double.infinity,
-                        ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            RestaurantDetailPage(restaurant: restaurant),
                       ),
-                      ListTile(
-                        title: Center( // Center widget used here for horizontal centering
-                          child: Text(
-                            restaurant.name,
-                            textAlign: TextAlign.center, // Center the text horizontally
-                            style: TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                    );
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: const BorderSide(
+                          color: Colors.black, width: 1.0), // Add this line
+                    ),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(10.0),
+                            topRight: Radius.circular(10.0),
+                          ),
+                          child: Image.network(
+                            restaurant.imageUrl,
+                            fit: BoxFit.cover,
+                            height: 200.0,
+                            width: double.infinity,
+                          ),
+                        ),
+                        ListTile(
+                          title: Center(
+                            // Center widget used here for horizontal centering
+                            child: Text(
+                              restaurant.name,
+                              textAlign: TextAlign.center,
+                              // Center the text horizontally
+                              style: const TextStyle(
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          subtitle: Center(
+                            // Center widget used here for horizontal centering
+                            child: Text(
+                              '${restaurant.cuisine} - ${restaurant.distance?.toStringAsFixed(1)} mi',
+                              textAlign: TextAlign.center,
+                              // Center the text horizontally
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ),
                         ),
-                        subtitle: Center( // Center widget used here for horizontal centering
-                          child: Text(
-                            '${restaurant.cuisine} - ${restaurant.distance?.toStringAsFixed(1)} mi',
-                            textAlign: TextAlign.center, // Center the text horizontally
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 );
               },
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // You can set the initial index as needed
+        onTap: (index) {
+          switch (index) {
+            case 0:
+            // Navigate to the current page (SearchPage)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainPage()),
+              );
+              break;
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+              break;
+            case 2:
+            // Navigate to the MainPage
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
           ),
         ],
       ),

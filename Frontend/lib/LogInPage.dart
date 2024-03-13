@@ -29,6 +29,8 @@ final ThemeData themeData = ThemeData(
   ),
 );
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -112,12 +114,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool isValidEmail(String email) {
-    final pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
+    const pattern = r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$';
     final regExp = RegExp(pattern);
     return regExp.hasMatch(email);
   }
   bool isValidPassword(String password) {
-    final pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    const pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
     final regExp = RegExp(pattern);
 
     return regExp.hasMatch(password);
@@ -204,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
       if (responseData != null && responseData['success'] == true) {
         if (responseData.containsKey('email')) {
           String email = responseData['email'];
-          print("THE EMAIL IS ${email}");
+          print("THE EMAIL IS $email");
           await _saveEmailToStorage(email);
           return true;
         } else {
@@ -271,13 +273,12 @@ class _LoginPageState extends State<LoginPage> {
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        SizedBox(height: 30),
+                        const SizedBox(height: 30),
 
                         // Login Button
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: primaryColor,
-                            onPrimary: Colors.white,
+                            foregroundColor: Colors.white, backgroundColor: primaryColor,
                           ),
                           onPressed: isLoading ? null : () async {
                             String username = _usernameController.text;
@@ -285,7 +286,7 @@ class _LoginPageState extends State<LoginPage> {
 
                             if (!isValidPassword(password)) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Invalid username or password format')),
+                                const SnackBar(content: Text('Invalid username or password format')),
                               );
                               return;
                             }
@@ -295,31 +296,31 @@ class _LoginPageState extends State<LoginPage> {
                             if (loginSuccess) {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => MainPage()),
+                                MaterialPageRoute(builder: (context) => const MainPage()),
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Incorrect login credentials')),
+                                const SnackBar(content: Text('Incorrect login credentials')),
                               );
                             }
                           },
-                          child: Text("Log In"),
+                          child: const Text("Log In"),
                         ),
 
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
                         // Create Account Button
                         TextButton(
                           style: TextButton.styleFrom(
-                            primary: primaryColor,
+                            foregroundColor: primaryColor,
                           ),
                           onPressed: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => CreateAccountPage()), // Assumes you have a CreateAccountPage widget
+                              MaterialPageRoute(builder: (context) => const CreateAccountPage()), // Assumes you have a CreateAccountPage widget
                             );
                           },
-                          child: Text("Create an Account"),
+                          child: const Text("Create an Account"),
                         ),
                       ],
                     ),
@@ -335,7 +336,7 @@ class _LoginPageState extends State<LoginPage> {
 class HeaderWidget extends StatelessWidget {
   final double height;
 
-  HeaderWidget({required this.height});
+  const HeaderWidget({super.key, required this.height});
   @override
   Widget build(BuildContext context) {
     return ClipPath(
@@ -355,7 +356,7 @@ class HeaderWidget extends StatelessWidget {
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    var path = new Path();
+    var path = Path();
     path.lineTo(0, size.height - 20); // Start from the left bottom corner
 
     // Create the first wave
