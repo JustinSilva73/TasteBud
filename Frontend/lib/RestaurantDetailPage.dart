@@ -5,7 +5,8 @@ import 'MainPage.dart';  // Replace with the path to the file where the Restaura
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:core';
-import 'dart:io';
+import 'dart:async'; // Import the async library for Timer
+import 'package:http/http.dart' as http;
 
 import 'Search.dart';
 
@@ -18,9 +19,31 @@ class RestaurantDetailPage extends StatefulWidget {
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
 }
 
-class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
+class _RestaurantDetailPageState extends State<RestaurantDetailPage> with SingleTickerProviderStateMixin {
   final double _initialImageHeight = 300;
   double _imageHeight = 300; // Default image height
+  Timer? _likeDebounce; // Timer for debouncing like requests
+  Timer? _dislikeDebounce; // Timer for debouncing dislike requests
+  bool likeButton = false;
+  bool dislikeButton = false;
+  AnimationController? _animationController;
+  Animation<double>? _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(_animationController!);
+  }
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
 
   void _handleVerticalUpdate(DragUpdateDetails details) {
     setState(() {
@@ -68,6 +91,24 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       print('Failed to launch URL: $e');
     }
   }
+  Future<void> _LikedRestaurant() async {
+    if (_likeDebounce?.isActive ?? false) _likeDebounce!.cancel(); // Cancel previous timer if active
+    _likeDebounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() { // This will trigger the UI to rebuild with the new state
+        likeButton = !likeButton;
+        if (likeButton) {
+          _animationController?.forward();
+        } else {
+          _animationController?.reverse();
+        }
+        if (likeButton == true && dislikeButton == true){
+          dislikeButton = false;
+        }
+      });
+      // Replace this comment with your logic to handle a "like" action
+      print("Liked restaurant");
+    });
+  }
 
   Future<void> _launchWebsiteUrl(String urlString) async {
     String chromeSchemeUrl = urlString.replaceFirst('http://', 'googlechrome://').replaceFirst('https://', 'googlechrome://');
@@ -89,8 +130,21 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
   }
 
+  Future<void> _DislikedRestaurant() async {
+    if (_dislikeDebounce?.isActive ?? false) _dislikeDebounce!.cancel(); // Cancel previous timer if active
+    _dislikeDebounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() { // This will trigger the UI to rebuild with the new state
+        dislikeButton = !dislikeButton;
+        if (likeButton == true && dislikeButton == true){
+          likeButton = false;
+          _animationController?.reverse();
+        }
+      });
 
-
+      // Replace this comment with your logic to handle a "dislike" action
+      print("Disliked restaurant");
+    });
+  }
 
   Widget _buildButton(String text, IconData icon, VoidCallback onPressed) {
     return ElevatedButton.icon(
@@ -103,6 +157,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +295,44 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       ),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                      height: 40,// Reduced vertical padding
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black),
+                        borderRadius: BorderRadius.circular(4), // Smaller border radius for less rounded corners
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,// Use the minimum space needed by children
+                        children: [
+                          ScaleTransition(
+                            scale: _scaleAnimation!,
+                            child: IconButton(
+                              icon: Icon(Icons.thumb_up_outlined, size: 18),
+                              color: likeButton ? Color(0xFFA30000) : Theme.of(context).iconTheme.color,
+                              onPressed: () => _LikedRestaurant(),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Container(
+                            height: 30, // Height of the divider
+                            width: 1,
+                            color: Colors.black,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.thumb_down_outlined, size: 18), // Smaller icon size
+                            onPressed: () => _DislikedRestaurant(),
+                            color: dislikeButton ? Color(0xFFA30000) :Theme.of(context).iconTheme.color, // Use theme color when likeButton is false
+                            padding: EdgeInsets.zero, // No padding inside the button
+                            constraints: BoxConstraints(), // Apply constraints to reduce the button size
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
