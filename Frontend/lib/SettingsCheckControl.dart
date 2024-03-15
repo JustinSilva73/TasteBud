@@ -9,5 +9,6 @@ class SettingsCheckControl {
     prefs.setBool('popups', prefs.getBool('popups') ?? true);
     prefs.setBool('rememberLog', prefs.getBool('rememberLog') ?? false);
     prefs.setBool('locationServ', prefs.getBool('locationServ') ?? false);
+    prefs.setBool('todayPopShown', false);
   }
 }
