@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'LogInPage.dart';
+import 'MainPage.dart';
+import 'Search.dart';
 Future<bool> getNotifications() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('notifications') ?? true; // default to true
 }
 Future<bool> getPopup() async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('popups') ?? true; // default to true
+  bool popupsEnabled = prefs.getBool('popups') ?? true;
+  print("Popups enabled: $popupsEnabled");
+  return popupsEnabled;
 }
+
 
 Future<bool> getRememberLog() async {
   final prefs = await SharedPreferences.getInstance();
@@ -21,10 +26,10 @@ Future<bool> getLocationServ() async {
 }
 
 Color? activeColorSwitch = Colors.green[300];
-Future<bool> notificationsOn = getNotifications();
-Future<bool> popUpsOn = getPopup();
-Future<bool> rememberLoginOn = getRememberLog();
-Future<bool> locationServicesOn = getLocationServ();
+bool notificationsOn = getNotifications() as bool;
+bool popUpsOn = getPopup() as bool;
+bool rememberLoginOn = getRememberLog() as bool;
+bool locationServicesOn = getLocationServ() as bool;
 
 
 void onTileTap(String tileType) {
@@ -41,7 +46,7 @@ void onTileTap(String tileType) {
   }
 }
 
-Future<bool> getPopUpState(){
+bool getPopUpState(){
   return popUpsOn;
 }
 
@@ -65,8 +70,10 @@ Future<void> saveNotificationsEnabled(bool enabled) async {
 
 Future<void> savePopUpEnabled(bool enabled) async {
   final prefs = await SharedPreferences.getInstance();
+  print("savePopUpEnabled called with value: $enabled");
   await prefs.setBool('popups', enabled);
 }
+
 
 Future<void> saveRememberLogEnabled(bool enabled) async {
   final prefs = await SharedPreferences.getInstance();
@@ -135,10 +142,14 @@ void LogoutTap(BuildContext context) async {
 
 
 class SettingsView extends StatefulWidget {
+  final int currentIndex;
+  final List<Restaurant> allRestaurants; // Add this line
+
+  const SettingsView({Key? key, this.currentIndex = 1, required this.allRestaurants}) : super(key: key); // Modify this line
+
   @override
   _SettingsViewState createState() => _SettingsViewState();
 }
-
 class _SettingsViewState extends State<SettingsView> {
 
   @override
@@ -191,99 +202,74 @@ class _SettingsViewState extends State<SettingsView> {
               FutureBuilder<bool>(
                 future: getNotifications(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SwitchListTile(
-                      title: Text('Notifications',style: TextStyle(fontSize: 15)),
-                      secondary: Icon(Icons.notifications),
-                      value: true, // Default value while waiting
-                      activeTrackColor: activeColorSwitch,
-                      onChanged: null, // Disable the switch while loading
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return SwitchListTile(
-                      title: Text('Notifications',style: TextStyle(fontSize: 15)),
-                      secondary: Icon(Icons.notifications),
-                      value: snapshot.data ?? true, // Default value if null
-                      activeTrackColor: activeColorSwitch,
-                      onChanged: (newValue) {
-                        setState(() {
-                          notificationsOn = Future.value(newValue); // Update the future value
-                        });
-                        onSwitchTap('Notifications');
-                      },
-                    );
-                  }
+                  bool switchValue = snapshot.data ?? true; // Default to true or current state
+                  return SwitchListTile(
+                    title: Text('Notifications', style: TextStyle(fontSize: 15)),
+                    secondary: Icon(Icons.notifications),
+                    value: switchValue,
+                    activeTrackColor: activeColorSwitch,
+                    onChanged: (newValue) async {
+                      await saveNotificationsEnabled(newValue); // Save preference asynchronously
+                      setState(() {
+                        // This ensures UI is updated after the preference is saved
+                        notificationsOn = newValue; // Consider removing if you move to local state management
+                      });
+                    },
+                  );
                 },
               ),
               FutureBuilder<bool>(
                 future: getPopup(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // or some placeholder
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return SwitchListTile(
-                      title: Text('Pop-ups', style: TextStyle(fontSize: 15)),
-                      secondary: Icon(Icons.podcasts_outlined),
-                      value: snapshot.data ?? true,
-                      activeColor: activeColorSwitch,
-                      onChanged: (newValue) {
-                        setState(() {
-                          popUpsOn = newValue as Future<bool>;
-                        });
-                        onSwitchTap('Pop-ups');
-                      },
-                    );
-                  }
+                  bool switchValue = snapshot.data ?? true; // Default to true or current state
+                  return SwitchListTile(
+                    title: Text('Pop-ups', style: TextStyle(fontSize: 15)),
+                    secondary: Icon(Icons.podcasts_outlined),
+                    value: switchValue,
+                    activeTrackColor: activeColorSwitch,
+                    onChanged: (newValue) async {
+                      await savePopUpEnabled(newValue); // Save preference asynchronously
+                      setState(() {
+                        popUpsOn = newValue;
+                      });
+                    },
+                  );
                 },
               ),
               FutureBuilder<bool>(
                 future: getRememberLog(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // or some placeholder
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return SwitchListTile(
-                      title: Text('Remember Log in', style: TextStyle(fontSize: 15)),
-                      secondary: Icon(Icons.login_sharp),
-                      value: snapshot.data ?? true,
-                      activeColor: activeColorSwitch,
-                      onChanged: (newValue) {
-                        setState(() {
-                          rememberLoginOn = newValue as Future<bool>;
-                        });
-                        onSwitchTap('Remember Log in');
-                      },
-                    );
-                  }
+                  bool switchValue = snapshot.data ?? true; // Default to true or current state
+                  return SwitchListTile(
+                    title: Text('Remember Log in', style: TextStyle(fontSize: 15)),
+                    secondary: Icon(Icons.memory),
+                    value: switchValue,
+                    activeTrackColor: activeColorSwitch,
+                    onChanged: (newValue) async {
+                      await saveRememberLogEnabled(newValue); // Save preference asynchronously
+                      setState(() {
+                        rememberLoginOn = newValue;
+                      });
+                    },
+                  );
                 },
               ),
               FutureBuilder<bool>(
                 future: getLocationServ(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // or some placeholder
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return SwitchListTile(
-                      title: Text('Location Services', style: TextStyle(fontSize: 15)),
-                      secondary: Icon(Icons.location_disabled),
-                      value: snapshot.data ?? true,
-                      activeColor: activeColorSwitch,
-                      onChanged: (newValue) {
-                        setState(() {
-                          locationServicesOn = newValue as Future<bool>;
-                        });
-                        onSwitchTap('Location Services');
-                      },
-                    );
-                  }
+                  bool switchValue = snapshot.data ?? true; // Default to true or current state
+                  return SwitchListTile(
+                    title: Text('Location Services', style: TextStyle(fontSize: 15)),
+                    secondary: Icon(Icons.location_on),
+                    value: switchValue,
+                    activeTrackColor: activeColorSwitch,
+                    onChanged: (newValue) async {
+                      await saveLocationServEnabled(newValue); // Save preference asynchronously
+                      setState(() {
+                        locationServicesOn = newValue;
+                      });
+                    },
+                  );
                 },
               )
             ],
@@ -307,6 +293,40 @@ class _SettingsViewState extends State<SettingsView> {
                 )
               ]
           )
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: widget.currentIndex, // Use the currentIndex
+        onTap: (index) {
+          // Update this function to navigate based on 'index'
+          if (index == widget.currentIndex) return; // Do nothing if the current tab is tapped
+
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainPage()));
+              break;
+            case 1:
+            // Already on Settings, do nothing or perhaps refresh the page
+              break;
+            case 2:
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SearchPage(allRestaurants: widget.allRestaurants))); // Make sure to pass the correct arguments
+              break;
+          }
+        },
+        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
         ],
       ),
     );
