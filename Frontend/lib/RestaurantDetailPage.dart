@@ -1,23 +1,33 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tastebud/SettingsView.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'MainPage.dart';  // Replace with the path to the file where the Restaurant class is defined.
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:core';
 import 'dart:async'; // Import the async library for Timer
-import 'package:http/http.dart' as http;
 
 import 'Search.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   final Restaurant restaurant;
+  final List<Restaurant> allRestaurants; // Add this line
+  final int currentIndex; // Add this line
 
-  const RestaurantDetailPage({super.key, required this.restaurant});
+  const RestaurantDetailPage({
+    Key? key,
+    required this.restaurant,
+    required this.allRestaurants,
+    required this.currentIndex, // Modify the constructor
+  }) : super(key: key);
 
   @override
   _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
 }
+
 
 class _RestaurantDetailPageState extends State<RestaurantDetailPage> with SingleTickerProviderStateMixin {
   final double _initialImageHeight = 300;
@@ -285,15 +295,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                         Icons.public,
                             () => _launchWebsiteUrl(widget.restaurant.url),
                       ),
-                      _buildButton(
-                        'Share',
-                        Icons.share,
-                            () => Share.share(
-                            widget.restaurant.url,
-                            subject:
-                            'Check out this restaurant!'),
-                      ),
                     ],
+                  ),
+                  Center( // Use Center to align the 'Share' button if desired
+                    child: _buildButton(
+                      'Share',
+                      Icons.share,
+                          () => Share.share(
+                        widget.restaurant.url,
+                        subject: 'Check out this restaurant!',
+                      ),
+                    ),
                   ),
                   Align(
                     alignment: Alignment.center,
@@ -340,7 +352,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // You can set the initial index as needed
+        currentIndex: widget.currentIndex, // Use the passed currentIndex
         onTap: (index) {
           switch (index) {
             case 0:
@@ -349,22 +361,26 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                 context,
                 MaterialPageRoute(builder: (context) => const MainPage()),
               );
+              break; // Make sure to add break statements to prevent fall-through
             case 1:
             // Navigate to the SettingsPage
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(
+                  builder: (_) => SettingsView(currentIndex: 1, allRestaurants: widget.allRestaurants),
+                ),
               );
               break;
             case 2:
             // Navigate to the SearchPage
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SearchPage(allRestaurants: [])), // Update with your list of restaurants
+                MaterialPageRoute(builder: (context) => SearchPage(allRestaurants: widget.allRestaurants)),
               );
               break;
           }
         },
+        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
