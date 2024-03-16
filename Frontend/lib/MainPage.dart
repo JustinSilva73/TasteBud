@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tastebud/SettingsView.dart';
-
 import 'CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
@@ -10,7 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tastebud/TodayPop.dart';
-
+import 'SettingsView.dart';
 
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
@@ -32,7 +30,6 @@ class _MainPageState extends State<MainPage> {
   final double maxDistance = 14000; // 5 kilometers in meters
 
   @override
-  @override
   void initState() {
     super.initState();
     _initializePositionFuture();
@@ -45,12 +42,21 @@ class _MainPageState extends State<MainPage> {
     _loadStoredEmail();
     _loadStoredRestaurants();
 
-    if (await getPopUpState()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) =>
-          _showTodayPop(context));
+    // Correctly await the asynchronous call to getPopup()
+    bool popUpsEnabled = await getPopup();
+    if (popUpsEnabled && await _checkTodayPop()) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('todayPopShown', true);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
+      print("TodayPopUpShow");
     }
+    print("TodayPopUpNotShown");
   }
-
+  Future<bool> _checkTodayPop() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasShownTodayPop = prefs.getBool('todayPopShown') ?? false;
+    return !hasShownTodayPop;
+  }
 
   void _showTodayPop(BuildContext context) {
     showModalBottomSheet(
@@ -96,7 +102,6 @@ class _MainPageState extends State<MainPage> {
                 restaurants = sortedRestaurants;
               });
             }
-
         );
       },
     );
@@ -401,16 +406,20 @@ class _MainPageState extends State<MainPage> {
                   handleMarkerCallback: (LatLng location, String name) {
                     _handleMarkerCallback(location, name, index);
                   },
+                  allRestaurants: restaurants,
                 );
               },
             ),
           ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // You can set the initial index as needed
+        currentIndex: 0, // Initialize with the index of the currently selected item
         onTap: (index) {
+          setState(() {
+            // Update the current index to highlight the selected item
+            // Replace this logic with your actual navigation logic
+          });
           switch (index) {
             case 0:
             // Navigate to the current page (MainPage)
@@ -419,7 +428,9 @@ class _MainPageState extends State<MainPage> {
             // Navigate to the SettingsPage
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(
+                  builder: (_) => SettingsView(currentIndex: 1, allRestaurants: restaurants),
+                ),
               );
               break;
             case 2:
@@ -432,6 +443,7 @@ class _MainPageState extends State<MainPage> {
               break;
           }
         },
+        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -466,8 +478,13 @@ class _MainPageState extends State<MainPage> {
             // Handle marker tap event
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) =>
-                  RestaurantDetailPage(restaurant: restaurants[index])),
+              MaterialPageRoute(
+                builder: (context) => RestaurantDetailPage(
+                  restaurant: restaurants[index], // Pass the specific restaurant
+                  allRestaurants: restaurants,
+                  currentIndex: 0
+                ),
+              ),
             );
           },
         ),
@@ -541,21 +558,6 @@ class Restaurant {
       'totalPoints': totalPoints,    };
   }
 }
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: const Center(
-        child: Text('Settings Page Content'),
-      ),
-    );
-  }
-}
 class HeaderWidget extends StatelessWidget {
   final double height;
 
@@ -579,13 +581,16 @@ class RestaurantItem extends StatelessWidget {
   final Restaurant restaurant;
   final int index;
   final Function(LatLng, String) handleMarkerCallback;
+  final List<Restaurant> allRestaurants; // Add this
 
   const RestaurantItem({
     Key? key,
     required this.restaurant,
     required this.index,
     required this.handleMarkerCallback,
+    required this.allRestaurants, // Add this
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -660,12 +665,17 @@ class RestaurantItem extends StatelessWidget {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) =>
-                                RestaurantDetailPage(restaurant: restaurant)),
+                            MaterialPageRoute(
+                              builder: (context) => RestaurantDetailPage(
+                                restaurant: restaurant,
+                                allRestaurants: allRestaurants,
+                                currentIndex: 0,// Use the passed list
+                              ),
+                            ),
                           );
                         },
                         child: const Text(
-                            'More Info', style: TextStyle(fontSize: 12.0)),
+                            'More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
                       ),
                     ),
                     const SizedBox(height: 4.0),
@@ -678,7 +688,7 @@ class RestaurantItem extends StatelessWidget {
                               restaurant.location, restaurant.name);
                         },
                         child: const Text(
-                            'Display on Map', style: TextStyle(fontSize: 10.0)),
+                            'Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
                       ),
                     ),
                   ],

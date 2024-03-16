@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tastebud/SettingsView.dart';
 import 'MainPage.dart';
 import 'RestaurantDetailPage.dart';
 import 'main.dart'; // Import the Startup page
@@ -16,6 +17,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   String _searchText = "";
   late List<Restaurant> _allRestaurants;
+  int _currentIndex = 2; // Assuming "Search" is the third item
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _SearchPageState extends State<SearchPage> {
   void _signOutAndRestartApp() {
     // Navigate to the Startup page and remove all routes beneath
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const MyApp()),
+      MaterialPageRoute(builder: (context) => MyApp()),
           (Route<dynamic> route) => false,
     );
   }
@@ -99,7 +101,7 @@ class _SearchPageState extends State<SearchPage> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) =>
-                            RestaurantDetailPage(restaurant: restaurant),
+                            RestaurantDetailPage(restaurant: restaurant, allRestaurants: filteredRestaurants, currentIndex: 2),
                       ),
                     );
                   },
@@ -161,28 +163,34 @@ class _SearchPageState extends State<SearchPage> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // You can set the initial index as needed
+        currentIndex: _currentIndex, // Use the _currentIndex variable here
         onTap: (index) {
+          // Update the state with the new index when an item is tapped
+          setState(() {
+            _currentIndex = index; // Update the current index
+          });
           switch (index) {
             case 0:
-            // Navigate to the current page (SearchPage)
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const MainPage()),
               );
               break;
             case 1:
-            // Navigate to the SettingsPage
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(
+                  builder: (_) => SettingsView(currentIndex: 1, allRestaurants: _allRestaurants),
+                ),
               );
               break;
             case 2:
-            // Navigate to the MainPage
+            // If the "Search" item is tapped again, you might not need to do anything
+            // or refresh the search page, depending on your app's navigation logic
               break;
           }
         },
+        selectedItemColor: Color(0xFFA30000),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
