@@ -29,7 +29,7 @@ const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => 
         // Check if businesses array is present and has at least one item
         if (response.data.businesses && response.data.businesses.length > 0) {
             const business = response.data.businesses[0];
-            fs.writeFile('yelpInfo.txt', `${business.alias}\n${business.url}`, (err) => {
+            fs.appendFile('yelpInfo.txt', `${business.alias}\n${business.url}\n`, (err) => {
                 if (err) {
                     console.error('Error writing to file:', err);
                 } else {
