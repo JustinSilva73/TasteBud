@@ -51,7 +51,7 @@ router.get('/restaurants', async (req, res) => {
             let yelpDetails;
             try {
                 //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
-                //yelpDetails = await getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
+                yelpDetails = await getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
                 console.log("YelpDetails: ", yelpDetails);
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);
@@ -69,9 +69,12 @@ router.get('/restaurants', async (req, res) => {
             basicDetails.url = yelpDetails && yelpDetails.url
                 ? yelpDetails.url
                 : "https://www.yelp.com"
-            
-            console.log("Assigned URL:", basicDetails.url); // Log the assigned URL for debugging
+            basicDetails.yelpID = yelpDetails && yelpDetails.yelpID
+                ? yelpDetails.yelpID
+                : "No Yelp ID available";
 
+            console.log("Assigned URL:", basicDetails.url); // Log the assigned URL for debugging
+            console.log("Assigned Yelp ID:", basicDetails.yelpID); // Log the assigned Yelp ID for debugging
             filteredPlaces.push(basicDetails);
         } 
         res.json(filteredPlaces); 

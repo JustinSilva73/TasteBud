@@ -395,6 +395,7 @@ class Restaurant {
   final bool? openingHours;
   double? distance;
   double? totalPoints;
+  String? yelpID;
 
   Restaurant({
     required this.name,
@@ -409,6 +410,7 @@ class Restaurant {
     this.openingHours,
     this.distance,
     this.totalPoints,
+    this.yelpID
   });
 
   // Convert JSON to Restaurant object
@@ -425,7 +427,8 @@ class Restaurant {
       icon: json['icon'],
       openingHours: json['opening_hours'] as bool?,
       distance: json['distance']?.toDouble(),
-      totalPoints: json['totalPoints']?.toDouble() ?? 0, // Set to 0 if null or not present
+      totalPoints: json['totalPoints']?.toDouble() ?? 0,
+      yelpID: json['yelpID'],
     );
   }
   Map<String, dynamic> toJson() {
