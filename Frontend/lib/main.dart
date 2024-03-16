@@ -21,11 +21,12 @@ Future<void> main() async {
     NotificationService().scheduleNotification(id: 2,
         title: 'TasteBud',
         body: 'Hey its time to eat',
-        dateTime: DateTime(2099, 1, 1, 12, 0, 0));
+        dateTime: DateTime(2024, 3, 14, 3, 50, 0));
     NotificationService().scheduleNotification(id: 3,
         title: 'TasteBud',
         body: 'Hey its time to eat',
         dateTime: DateTime(2099, 1, 1, 17, 0, 0));
+    print("True");
   }
   runApp(MyApp());
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tastebud/SettingsView.dart';
+import 'CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
 import 'Search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +8,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tastebud/TodayPop.dart';
+import 'SettingsView.dart';
+
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -18,16 +20,15 @@ class MainPage extends StatefulWidget {
 // _MainPageState holds the mutable state for MainPage.
 class _MainPageState extends State<MainPage> {
   String? storedEmail;
-  Position? currentPosition;
+  Position? _currentPosition;
   Key mapKey = const Key('mapKey');
   late Future<Position?> positionFuture;
-  final Set<Circle> _circles = {};  // Initialize the set of circles here.
+  final Set<Circle> _circles = {}; // Initialize the set of circles here.
   Set<Marker> _restaurantMarkers = {};
   List<Restaurant> restaurants = [];
   GoogleMapController? mapController;
   final double maxDistance = 14000; // 5 kilometers in meters
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -41,12 +42,21 @@ class _MainPageState extends State<MainPage> {
     _loadStoredEmail();
     _loadStoredRestaurants();
 
-    if (await getPopUpState()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) =>
-          _showTodayPop(context));
+    // Correctly await the asynchronous call to getPopup()
+    bool popUpsEnabled = await getPopup();
+    if (popUpsEnabled && await _checkTodayPop()) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('todayPopShown', true);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
+      print("TodayPopUpShow");
     }
+    print("TodayPopUpNotShown");
   }
-
+  Future<bool> _checkTodayPop() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasShownTodayPop = prefs.getBool('todayPopShown') ?? false;
+    return !hasShownTodayPop;
+  }
 
   void _showTodayPop(BuildContext context) {
     showModalBottomSheet(
@@ -78,19 +88,20 @@ class _MainPageState extends State<MainPage> {
 
               // Now sort the restaurants by totalPoints in descending order.
               List<Restaurant> sortedRestaurants = List.from(restaurants)
-                ..sort((a, b) => (b.totalPoints ?? 0).compareTo(a.totalPoints ?? 0));
+                ..sort((a, b) =>
+                    (b.totalPoints ?? 0).compareTo(a.totalPoints ?? 0));
 
               // Print the list after sorting.
               print("After sorting:");
               for (var sortedRestaurant in sortedRestaurants) {
-                print('${sortedRestaurant.name}: ${sortedRestaurant.totalPoints}');
+                print('${sortedRestaurant.name}: ${sortedRestaurant
+                    .totalPoints}');
               }
 
               setState(() {
                 restaurants = sortedRestaurants;
               });
             }
-
         );
       },
     );
@@ -106,6 +117,7 @@ class _MainPageState extends State<MainPage> {
       storedEmail = prefs.getString('storedEmail');
     });
   }
+
   _loadStoredRestaurants() async {
     List<Restaurant>? fetchedRestaurants = await fetchStoredRestaurants();
     if (fetchedRestaurants != null && fetchedRestaurants.isNotEmpty) {
@@ -114,16 +126,19 @@ class _MainPageState extends State<MainPage> {
       });
 
       // Run fetchRestaurantPrio right after setting the restaurants from local storage.
-      if(storedEmail != null) {
-        List<Restaurant> priorityRestaurants = await fetchRestaurantPrio(restaurants, storedEmail!);
+      if (storedEmail != null) {
+        List<Restaurant> priorityRestaurants = await fetchRestaurantPrio(
+            restaurants, storedEmail!);
         if (priorityRestaurants.isNotEmpty) {
           setState(() {
-            restaurants = priorityRestaurants;  // Update the restaurants list with priority restaurants from the server
+            restaurants =
+                priorityRestaurants; // Update the restaurants list with priority restaurants from the server
           });
         }
       }
 
-      _setRestaurantMarkers(restaurants);  // Set markers based on the potentially updated restaurants list.
+      _setRestaurantMarkers(
+          restaurants); // Set markers based on the potentially updated restaurants list.
     }
   }
 
@@ -133,11 +148,13 @@ class _MainPageState extends State<MainPage> {
 
     if (jsonString != null) {
       List<dynamic> jsonList = jsonDecode(jsonString);
-      List<Restaurant> fetchedRestaurants = jsonList.map((json) => Restaurant.fromJson(json)).toList();
+      List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
+          Restaurant.fromJson(json)).toList();
       return fetchedRestaurants;
     }
     return null;
   }
+
   Future<void> _loadPositionFromStorage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     double? storedLatitude = prefs.getDouble('latitude');
@@ -145,7 +162,7 @@ class _MainPageState extends State<MainPage> {
 
     if (storedLatitude != null && storedLongitude != null) {
       setState(() {
-        currentPosition = Position(
+        _currentPosition = Position(
             latitude: storedLatitude,
             longitude: storedLongitude,
             accuracy: 0.0,
@@ -161,14 +178,17 @@ class _MainPageState extends State<MainPage> {
       });
     }
   }
-  Future<List<Restaurant>> fetchRestaurantPrio(List<Restaurant> restaurants, String email) async {
+
+  Future<List<Restaurant>> fetchRestaurantPrio(List<Restaurant> restaurants,
+      String email) async {
     final response = await http.post(
       Uri.parse('http://10.0.2.2:3000/priority/restaurantPrio'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode({
-        'restaurants': restaurants.map((r) => r.toJson()).toList(), // Convert list of Restaurant objects to list of JSON
+        'restaurants': restaurants.map((r) => r.toJson()).toList(),
+        // Convert list of Restaurant objects to list of JSON
         'email': email,
       }),
     );
@@ -194,9 +214,11 @@ class _MainPageState extends State<MainPage> {
 
     for (var restaurant in fetchedRestaurants) {
       final marker = Marker(
-        markerId: MarkerId(restaurant.name), // Change this if you have unique IDs
+        markerId: MarkerId(restaurant.name),
+        // Change this if you have unique IDs
         position: restaurant.location,
-        infoWindow: InfoWindow(title: restaurant.name, snippet: restaurant.address),
+        infoWindow: InfoWindow(
+            title: restaurant.name, snippet: restaurant.address),
         // You can also add other properties like icon, etc.
       );
 
@@ -205,21 +227,23 @@ class _MainPageState extends State<MainPage> {
 
     setState(() {
       _restaurantMarkers = tempMarkers;
-      restaurants = fetchedRestaurants;  // Update the restaurants list
+      restaurants = fetchedRestaurants; // Update the restaurants list
     });
     if (fetchedRestaurants.isNotEmpty) {
-      LatLngBounds bounds = _boundsOfRestaurants(fetchedRestaurants, currentPosition!, maxDistance);
+      LatLngBounds bounds = _boundsOfRestaurants(
+          fetchedRestaurants, _currentPosition!, maxDistance);
       _updateCameraBounds(bounds);
     }
   }
 
 
   Future<Position?> _determinePosition() async {
-    if (currentPosition != null) {
+    if (_currentPosition != null) {
       _circles.add(
         Circle(
           circleId: const CircleId("currentLocationCircle"),
-          center: LatLng(currentPosition!.latitude, currentPosition!.longitude),
+          center: LatLng(
+              _currentPosition!.latitude, _currentPosition!.longitude),
           radius: 400,
           fillColor: Colors.blue.withOpacity(0.5),
           strokeWidth: 2,
@@ -227,12 +251,13 @@ class _MainPageState extends State<MainPage> {
         ),
       );
     }
-    print("Current Position: $currentPosition");
-    return currentPosition;
+    print("Current Position: $_currentPosition");
+    return _currentPosition;
   }
 
 
-  LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants, Position currentPosition, double maxDistance) {
+  LatLngBounds _boundsOfRestaurants(List<Restaurant> restaurants,
+      Position currentPosition, double maxDistance) {
     // Filter restaurants based on distance from the current position
     var filteredRestaurants = restaurants.where((restaurant) {
       var distance = Geolocator.distanceBetween(
@@ -259,10 +284,14 @@ class _MainPageState extends State<MainPage> {
     double maxLng = filteredRestaurants[0].location.longitude;
 
     for (var restaurant in filteredRestaurants) {
-      if (restaurant.location.latitude < minLat) minLat = restaurant.location.latitude;
-      if (restaurant.location.latitude > maxLat) maxLat = restaurant.location.latitude;
-      if (restaurant.location.longitude < minLng) minLng = restaurant.location.longitude;
-      if (restaurant.location.longitude > maxLng) maxLng = restaurant.location.longitude;
+      if (restaurant.location.latitude < minLat)
+        minLat = restaurant.location.latitude;
+      if (restaurant.location.latitude > maxLat)
+        maxLat = restaurant.location.latitude;
+      if (restaurant.location.longitude < minLng)
+        minLng = restaurant.location.longitude;
+      if (restaurant.location.longitude > maxLng)
+        maxLng = restaurant.location.longitude;
     }
 
     // Calculate the range of latitudes and longitudes
@@ -283,12 +312,12 @@ class _MainPageState extends State<MainPage> {
   }
 
 
-
   Future<void> _updateCameraBounds(LatLngBounds bounds) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    CameraUpdate zoomIn = CameraUpdate.zoomIn();  // A CameraUpdate to zoom in
-    mapController?.animateCamera(zoomIn);  // Apply the zoom in
-    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));  // Then apply the new bounds
+    CameraUpdate zoomIn = CameraUpdate.zoomIn(); // A CameraUpdate to zoom in
+    mapController?.animateCamera(zoomIn); // Apply the zoom in
+    mapController?.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 11.25)); // Then apply the new bounds
   }
 
 
@@ -296,38 +325,35 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFFA30000), // Sets the background color of the AppBar
-        title: Text(
-          "Restaurant",
-          style: TextStyle(color: Colors.white), // Sets the title text color
-        ),
-        iconTheme: IconThemeData(color: Colors.white), // Sets the icon color
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => SearchPage(allRestaurants: restaurants),
-              ));
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56.0),
+        child: AppBar(
+          backgroundColor: const Color(0xFFA30000),
+          iconTheme: const IconThemeData(color: Colors.white),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4.0),
+            child: Container(
+              color: Colors.black,
+              height: 0.5,
+            ),
           ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
-          child: Container(
-            color: Colors.black,
-            height: 0.5, // Thickness of the bottom border
+          title: Center(
+            child: Image.asset(
+              'assets/logo.png',
+              // Replace with the correct path for your logo asset
+              height: 60, // Adjust the height as needed
+            ),
           ),
         ),
       ),
       body: Column(
         children: [
           SizedBox(
-            height: 200,  // Setting a fixed height for the map.
+            height: 200, // Setting a fixed height for the map.
             child: FutureBuilder<Position?>(
               future: positionFuture,
-              builder: (BuildContext context, AsyncSnapshot<Position?> snapshot) {
+              builder: (BuildContext context,
+                  AsyncSnapshot<Position?> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -338,21 +364,25 @@ class _MainPageState extends State<MainPage> {
 
                     return GoogleMap(
                       onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;  // Storing the map controller for future use.
+                        mapController =
+                            controller; // Storing the map controller for future use.
 
                         // If there are any restaurants fetched before the map was created, we should set the bounds immediately.
-                        if (restaurants.isNotEmpty && currentPosition != null) {
-                          LatLngBounds bounds = _boundsOfRestaurants(restaurants, currentPosition!, maxDistance);
+                        if (restaurants.isNotEmpty &&
+                            _currentPosition != null) {
+                          LatLngBounds bounds = _boundsOfRestaurants(
+                              restaurants, _currentPosition!, maxDistance);
                           _updateCameraBounds(bounds);
                         }
                       },
                       // Setting the initial position of the map to the user's current location.
                       initialCameraPosition: CameraPosition(
                         target: LatLng(position.latitude, position.longitude),
-                        zoom: 10,  // Initial zoom level. Adjust this based on preference.
+                        zoom: 11.25, // Initial zoom level. Adjust this based on preference.
                       ),
-                      markers: _restaurantMarkers,  // Display all the restaurant markers on the map.
-                      circles: _circles,  // Display the circle around the user's current location.
+                      markers: _restaurantMarkers,
+                      // Display all the restaurant markers on the map.
+                      circles: _circles, // Display the circle around the user's current location.
                     );
                   } else {
                     // If there's no position data available, show an error message.
@@ -370,16 +400,99 @@ class _MainPageState extends State<MainPage> {
             child: ListView.builder(
               itemCount: restaurants.length,
               itemBuilder: (context, index) {
-                return RestaurantItem(restaurant: restaurants[index]);
+                return RestaurantItem(
+                  restaurant: restaurants[index],
+                  index: index, // Pass the index here
+                  handleMarkerCallback: (LatLng location, String name) {
+                    _handleMarkerCallback(location, name, index);
+                  },
+                  allRestaurants: restaurants,
+                );
               },
             ),
           ),
         ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // Initialize with the index of the currently selected item
+        onTap: (index) {
+          setState(() {
+            // Update the current index to highlight the selected item
+            // Replace this logic with your actual navigation logic
+          });
+          switch (index) {
+            case 0:
+            // Navigate to the current page (MainPage)
+              break;
+            case 1:
+            // Navigate to the SettingsPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SettingsView(currentIndex: 1, allRestaurants: restaurants),
+                ),
+              );
+              break;
+            case 2:
+            // Navigate to the SearchPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>
+                    SearchPage(allRestaurants: restaurants)),
+              );
+              break;
+          }
+        },
+        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+        ],
+      ),
     );
   }
-}
 
+  void _handleMarkerCallback(LatLng location, String restaurantName,
+      int index) async {
+    setState(() {
+      _restaurantMarkers.clear(); // Clear existing markers
+      _restaurantMarkers.add(
+        Marker(
+          markerId: MarkerId(restaurantName),
+          position: location,
+          infoWindow: InfoWindow(
+            title: restaurantName,
+            snippet: 'Click to view details',
+          ),
+          onTap: () {
+            // Handle marker tap event
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RestaurantDetailPage(
+                  restaurant: restaurants[index], // Pass the specific restaurant
+                  allRestaurants: restaurants,
+                  currentIndex: 0
+                ),
+              ),
+            );
+          },
+        ),
+      );
+      mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 11.25)); // Adjust the zoom level as needed
+    });
+  }
+}
 
 // A simple Dart class to represent a restaurant's data.
 class Restaurant {
@@ -448,42 +561,145 @@ class Restaurant {
       'totalPoints': totalPoints,    };
   }
 }
+class HeaderWidget extends StatelessWidget {
+  final double height;
+
+  const HeaderWidget({super.key, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: height,
+      color: primaryColor, // Replace with your desired color or gradient
+      child: Center(
+        child: Image.asset('assets/logo.png'), // Replace with your logo asset path
+      ),
+    );
+  }
+}
 
 
-// Stateless widget to represent a single restaurant item.
 class RestaurantItem extends StatelessWidget {
   final Restaurant restaurant;
+  final int index;
+  final Function(LatLng, String) handleMarkerCallback;
+  final List<Restaurant> allRestaurants; // Add this
 
-  // Constructor to initialize the RestaurantItem widget with a Restaurant object.
-  const RestaurantItem({super.key, required this.restaurant});
+  const RestaurantItem({
+    Key? key,
+    required this.restaurant,
+    required this.index,
+    required this.handleMarkerCallback,
+    required this.allRestaurants, // Add this
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(4.0),  // Outer spacing for the card.
-      elevation: 0.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5.0),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.white,  // Set white background
-          child: Image.network(
-            restaurant.icon,  // Assuming 'icon' is a URL to the restaurant's icon image.
-            width: 40,  // Set the desired width
-            height: 40,  // Set the desired height
-            color: Colors.red,  // Set the desired accent color
-          ),
+      child: ExpansionTile(
+        title: Row(
+          children: [
+            const Icon(Icons.restaurant, color: Colors.red),
+            // Set color for the icon
+            const SizedBox(width: 8.0),
+            Text(restaurant.name),
+          ],
         ),
-        title: Text(restaurant.name),  // Display the restaurant's name.
-        subtitle: Text('${restaurant.address} - ${restaurant.distance?.toStringAsFixed(1)} mi'),  // Display the restaurant's address and distance.
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RestaurantDetailPage(restaurant: restaurant),
+        subtitle: Text(restaurant.address),
+        trailing: const Icon(Icons.keyboard_arrow_down, color: Colors.red),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Image.network(
+                      restaurant.imageUrl,
+                      // Use the actual field containing the image URL
+                      width: 80, // Adjust the width as needed
+                      height: 80, // Adjust the height as needed
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.local_dining, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Cuisine: ${restaurant.cuisine}',
+                              style: const TextStyle(fontSize: 12.0)),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          const Icon(Icons.attach_money, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Price: ${restaurant.priceLevel}',
+                              style: const TextStyle(fontSize: 12.0)),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          const Icon(Icons.directions, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Distance: ${restaurant.distance?.toString() ??
+                              'Unknown'} miles', style: const TextStyle(
+                              fontSize: 12.0)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RestaurantDetailPage(
+                                restaurant: restaurant,
+                                allRestaurants: allRestaurants,
+                                currentIndex: 0,// Use the passed list
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                            'More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    SizedBox(
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
+                      child: ElevatedButton(
+                        onPressed: () {
+                          handleMarkerCallback(
+                              restaurant.location, restaurant.name);
+                        },
+                        child: const Text(
+                            'Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
