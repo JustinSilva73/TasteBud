@@ -1,4 +1,4 @@
-require('dotenv').config();
+// require('dotenv').config();
 const express = require('express');
 const app = express();
 const PORT = 3006;
@@ -14,18 +14,16 @@ const googleMapsRoutesTest = require('./routes/Google/TGoogleMapsLogic');
 const prioRoute = require('./routes/Priority/DeterminePrio');
 const auth = require('./routes/Auth/Auth');
 const survey = require('./routes/Survey/survey');
-const userInfo = require('./routes/UserInfo/UserFavorites');    
+const userInfo = require('./routes/UserInfo/UserFavorites');   
+const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 
 app.use('/googleAPI', googleMapsRoutes);
-
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
-
 app.use('/priority',prioRoute);
-
 app.use('/auth',auth);
 app.use('/survey',survey);
-
 app.use('/userInfo',userInfo);
+app.use('/restaurant', userRestaurant)
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
