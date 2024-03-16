@@ -98,8 +98,7 @@ class _MainPageState extends State<MainPage> {
                     .totalPoints}');
               }
 
-              setState(() {
-                restaurants = sortedRestaurants;
+              setState(() {restaurants = sortedRestaurants;
               });
             }
         );
@@ -137,8 +136,7 @@ class _MainPageState extends State<MainPage> {
         }
       }
 
-      _setRestaurantMarkers(
-          restaurants); // Set markers based on the potentially updated restaurants list.
+      //_setRestaurantMarkers(restaurants); // Set markers based on the potentially updated restaurants list.
     }
   }
 
@@ -146,13 +144,11 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     String? jsonString = prefs.getString('restaurants');
 
-    if (jsonString != null) {
-      List<dynamic> jsonList = jsonDecode(jsonString);
-      List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
-          Restaurant.fromJson(json)).toList();
-      return fetchedRestaurants;
-    }
-    return null;
+    List<dynamic> jsonList = jsonDecode(jsonString!);
+    List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
+        Restaurant.fromJson(json)).toList();
+    return fetchedRestaurants;
+      return null;
   }
 
   Future<void> _loadPositionFromStorage() async {
@@ -284,14 +280,18 @@ class _MainPageState extends State<MainPage> {
     double maxLng = filteredRestaurants[0].location.longitude;
 
     for (var restaurant in filteredRestaurants) {
-      if (restaurant.location.latitude < minLat)
+      if (restaurant.location.latitude < minLat) {
         minLat = restaurant.location.latitude;
-      if (restaurant.location.latitude > maxLat)
+      }
+      if (restaurant.location.latitude > maxLat) {
         maxLat = restaurant.location.latitude;
-      if (restaurant.location.longitude < minLng)
+      }
+      if (restaurant.location.longitude < minLng) {
         minLng = restaurant.location.longitude;
-      if (restaurant.location.longitude > maxLng)
+      }
+      if (restaurant.location.longitude > maxLng) {
         maxLng = restaurant.location.longitude;
+      }
     }
 
     // Calculate the range of latitudes and longitudes
@@ -443,7 +443,7 @@ class _MainPageState extends State<MainPage> {
               break;
           }
         },
-        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
+        selectedItemColor: const Color(0xFFA30000), // Set the color for the selected item
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -597,14 +597,13 @@ class RestaurantItem extends StatelessWidget {
       child: ExpansionTile(
         title: Row(
           children: [
-            const Icon(Icons.restaurant, color: Colors.red),
-            // Set color for the icon
-            const SizedBox(width: 8.0),
+            Icon(Icons.restaurant, color: Color(0xFFA30000)), // Change color here
+            SizedBox(width: 8.0),
             Text(restaurant.name),
           ],
         ),
         subtitle: Text(restaurant.address),
-        trailing: const Icon(Icons.keyboard_arrow_down, color: Colors.red),
+        trailing: Icon(Icons.keyboard_arrow_down, color: Color(0xFFA30000)), // Change color here
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -615,42 +614,37 @@ class RestaurantItem extends StatelessWidget {
                   children: [
                     Image.network(
                       restaurant.imageUrl,
-                      // Use the actual field containing the image URL
-                      width: 80, // Adjust the width as needed
-                      height: 80, // Adjust the height as needed
+                      width: 80,
+                      height: 80,
                     ),
                   ],
                 ),
-                const SizedBox(width: 8.0),
+                SizedBox(width: 8.0),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.local_dining, color: Colors.red),
-                          const SizedBox(width: 4.0),
-                          Text('Cuisine: ${restaurant.cuisine}',
-                              style: const TextStyle(fontSize: 12.0)),
+                          Icon(Icons.local_dining, color: Color(0xFFA30000)), // Change color here
+                          SizedBox(width: 4.0),
+                          Text('Cuisine: ${restaurant.cuisine}', style: TextStyle(fontSize: 12.0)),
                         ],
                       ),
-                      const SizedBox(height: 4.0),
+                      SizedBox(height: 4.0),
                       Row(
                         children: [
-                          const Icon(Icons.attach_money, color: Colors.red),
-                          const SizedBox(width: 4.0),
-                          Text('Price: ${restaurant.priceLevel}',
-                              style: const TextStyle(fontSize: 12.0)),
+                          Icon(Icons.attach_money, color: Color(0xFFA30000)), // Change color here
+                          SizedBox(width: 4.0),
+                          Text('Price: ${restaurant.priceLevel}', style: TextStyle(fontSize: 12.0)),
                         ],
                       ),
-                      const SizedBox(height: 4.0),
+                      SizedBox(height: 4.0),
                       Row(
                         children: [
-                          const Icon(Icons.directions, color: Colors.red),
-                          const SizedBox(width: 4.0),
-                          Text('Distance: ${restaurant.distance?.toString() ??
-                              'Unknown'} miles', style: const TextStyle(
-                              fontSize: 12.0)),
+                          Icon(Icons.directions, color: Color(0xFFA30000)), // Change color here
+                          SizedBox(width: 4.0),
+                          Text('Distance: ${restaurant.distance?.toString() ?? 'Unknown'} miles', style: TextStyle(fontSize: 12.0)),
                         ],
                       ),
                     ],
@@ -659,8 +653,8 @@ class RestaurantItem extends StatelessWidget {
                 Column(
                   children: [
                     SizedBox(
-                      width: 90, // Adjust the width of the button
-                      height: 50, // Adjust the height of the button
+                      width: 90,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -669,26 +663,23 @@ class RestaurantItem extends StatelessWidget {
                               builder: (context) => RestaurantDetailPage(
                                 restaurant: restaurant,
                                 allRestaurants: allRestaurants,
-                                currentIndex: 0,// Use the passed list
+                                currentIndex: 0,
                               ),
                             ),
                           );
                         },
-                        child: const Text(
-                            'More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
+                        child: Text('More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
                       ),
                     ),
-                    const SizedBox(height: 4.0),
+                    SizedBox(height: 4.0),
                     SizedBox(
-                      width: 90, // Adjust the width of the button
-                      height: 50, // Adjust the height of the button
+                      width: 90,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          handleMarkerCallback(
-                              restaurant.location, restaurant.name);
+                          handleMarkerCallback(restaurant.location, restaurant.name);
                         },
-                        child: const Text(
-                            'Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
+                        child: Text('Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
                       ),
                     ),
                   ],
