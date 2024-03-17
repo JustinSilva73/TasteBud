@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
 const router = express.Router();
+require('dotenv').config();
 
 const YELP_API_KEY = process.env.YELP_API_KEY;
 const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => {

@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
+require('dotenv').config();
 
 const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
 
@@ -71,7 +72,7 @@ router.get('/restaurants', async (req, res) => {
                 : "https://www.yelp.com"
             basicDetails.yelpID = yelpDetails && yelpDetails.yelpID
                 ? yelpDetails.yelpID
-                : "No Yelp ID available";
+                : "No-Yelp-ID";
 
             console.log("Assigned URL:", basicDetails.url); // Log the assigned URL for debugging
             console.log("Assigned Yelp ID:", basicDetails.yelpID); // Log the assigned Yelp ID for debugging
