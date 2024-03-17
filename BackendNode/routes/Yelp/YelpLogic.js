@@ -1,6 +1,8 @@
 const express = require('express');
 const axios = require('axios');
+const fs = require('fs');
 const router = express.Router();
+require('dotenv').config();
 
 const YELP_API_KEY = process.env.YELP_API_KEY;
 const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => {
@@ -28,11 +30,20 @@ const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => 
         // Check if businesses array is present and has at least one item
         if (response.data.businesses && response.data.businesses.length > 0) {
             const business = response.data.businesses[0];
+            fs.appendFile('yelpInfo.txt', `${business.alias}\n${business.url}\n`, (err) => {
+                if (err) {
+                    console.error('Error writing to file:', err);
+                } else {
+                    console.log('Data stored in file successfully.');
+                }
+            });
             return {
+                yelpID: business.alias,
                 imageUrl: business.image_url,
                 categories: business.categories.map(category => category.title),
                 url: business.url
             };
+            
         } else {
             // Handle the case where no businesses are found
             console.log('No businesses found for the given query.');
