@@ -144,11 +144,15 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     String? jsonString = prefs.getString('restaurants');
 
-    List<dynamic> jsonList = jsonDecode(jsonString!);
-    List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
-        Restaurant.fromJson(json)).toList();
-    return fetchedRestaurants;
-      return null;
+    if (jsonString != null) {
+      List<dynamic> jsonList = jsonDecode(jsonString);
+      List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
+          Restaurant.fromJson(json)).toList();
+      print('InFetch: ${fetchedRestaurants[0].yelpID}');
+      return fetchedRestaurants;
+    }
+    return null;
+
   }
 
   Future<void> _loadPositionFromStorage() async {
@@ -558,7 +562,9 @@ class Restaurant {
       'icon': icon,
       'opening_hours': openingHours,
       'distance': distance,
-      'totalPoints': totalPoints,    };
+      'totalPoints': totalPoints,
+      'yelpID': yelpID
+    };
   }
 }
 class HeaderWidget extends StatelessWidget {

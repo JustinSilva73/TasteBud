@@ -69,6 +69,8 @@ class _LoginPageState extends State<LoginPage> {
     List<Map<String, dynamic>> jsonList = restaurants.map((restaurant) => restaurant.toJson()).toList();
     String jsonString = jsonEncode(jsonList);
     await prefs.setString('restaurants', jsonString);
+    print("Store restaurants");
+    print('Restaurants:  ${restaurants[0].yelpID}');
   }
 
 
