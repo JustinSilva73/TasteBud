@@ -150,6 +150,7 @@ class _MainPageState extends State<MainPage> {
       List<dynamic> jsonList = jsonDecode(jsonString);
       List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
           Restaurant.fromJson(json)).toList();
+      print('InFetch: ${fetchedRestaurants[0].yelpID}');
       return fetchedRestaurants;
     }
     return null;
@@ -558,7 +559,9 @@ class Restaurant {
       'icon': icon,
       'opening_hours': openingHours,
       'distance': distance,
-      'totalPoints': totalPoints,    };
+      'totalPoints': totalPoints,
+      'yelpID': yelpID
+    };
   }
 }
 class HeaderWidget extends StatelessWidget {
