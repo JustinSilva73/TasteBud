@@ -483,7 +483,11 @@ class _MainPageState extends State<MainPage> {
           ),
           onTap: () async {
             // Fetch route information from backend
-            final Uri backendUri = Uri.parse('http://10.0.2.2:3000/googleAPI/routes ?latitude=${location.latitude}&longitude=${location.longitude}');
+            final Uri backendUri = Uri.parse('https://maps.googleapis.com/maps/api/directions/json'
+            '&key = AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc'
+            '&destination = $Restaurant.location'
+            '&origin = $_currentPosition');
+
             final response = await http.get(backendUri);
 
             if (response.statusCode == 200) {
