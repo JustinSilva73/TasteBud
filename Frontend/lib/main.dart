@@ -26,7 +26,6 @@ Future<void> main() async {
         title: 'TasteBud',
         body: 'Hey its time to eat',
         dateTime: DateTime(2099, 1, 1, 17, 0, 0));
-    print("True");
   }
   runApp(MyApp());
 
