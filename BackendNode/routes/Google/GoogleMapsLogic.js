@@ -3,7 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 require('dotenv').config();
 
-const getYelpRestaurantDetails = require('../Yelp/YelpLogic');
+const yelpLogic = require('../Yelp/YelpLogic');
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -52,7 +52,7 @@ router.get('/restaurants', async (req, res) => {
             let yelpDetails;
             try {
                 //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
-                //yelpDetails = await getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
+                // yelpDetails = await yelpLogic.getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
                 console.log("YelpDetails: ", yelpDetails);
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);
@@ -84,7 +84,5 @@ router.get('/restaurants', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch data from Google Maps API.' });
     }   
 });
-
-
 
 module.exports = router;

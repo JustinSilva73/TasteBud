@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const { openConnection, closeConnection } = require('../DatabaseLogic');
+const yelpLogic = require('../Yelp/YelpLogic');
 
 const getTopCuisines = async (user_id) => {
     return new Promise((resolve, reject) => {
@@ -79,6 +80,56 @@ router.get('/user_id/:email', async (req, res) => {
     }
 });
 
+router.post('/pos', async (req, res) => {
+    const email = req.body.email;
+    const latitude = req.body.latitude;
+    const longitude = req.body.longitude;
+
+    try {
+        const user_id = await getUserID(email);
+        const yelpRes = await yelpLogic.getYelpRestaurantFromPosition(latitude, longitude);
+        const db = openConnection();
+        if (!db) {
+            console.log('Failed to connect to the database');
+            return res.status(500).json({ error: 'Failed to connect to the database' });
+        }
+        console.log('user_id:', user_id);
+        console.log(yelpRes.yelpID, yelpRes.categories)
+        let american = yelpRes.categories.indexOf('American (New)') != -1 || yelpRes.categories.indexOf('American (Traditional)') != -1 ? 1 : 0;
+        let italian = yelpRes.categories.indexOf('Italian') != -1 ? 1 : 0;
+        let chinese = yelpRes.categories.indexOf('Chinese') != -1 ? 1 : 0;
+        let japanese = yelpRes.categories.indexOf('Japanese') != -1 ? 1 : 0;
+        let mexican = yelpRes.categories.indexOf('Mexican') != -1 ? 1 : 0;
+        let indian = yelpRes.categories.indexOf('Indian') != -1 ? 1 : 0;
+        let mediterranean = yelpRes.categories.indexOf('Mediterranean') != -1 ? 1 : 0;
+        let thai = yelpRes.categories.indexOf('Thai') != -1 ? 1 : 0;
+        const query = `UPDATE tastebud.CuisineWeights 
+                               SET  american_weight = american_weight + ${american}, 
+                                    italian_weight = italian_weight + ${italian}, 
+                                    chinese_weight = chinese_weight + ${chinese}, 
+                                    japanese_weight = japanese_weight + ${japanese}, 
+                                    mexican_weight = mexican_weight + ${mexican},
+                                    indian_weight = indian_weight + ${indian}, 
+                                    mediterranean_weight = mediterranean_weight + ${mediterranean},
+                                    thai_weight = thai_weight + ${thai} 
+                               WHERE user_id = ?`;
+
+        db.query(query, [user_id], (err, results) => {
+            if (err) {
+                console.log('Error:', err);
+                res.status(500).json({ error: err });
+                closeConnection(db);
+                return;
+            } else {
+                res.json('Success'); // Adjust based on your expected result structure
+            }
+        });
+
+    } catch (error) {
+        console.log('Error:', error);
+        return res.status(500).json({ error: 'Failed to process your request' });
+    }
+});
 
 module.exports = router;
 
