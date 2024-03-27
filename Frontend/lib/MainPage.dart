@@ -333,6 +333,7 @@ class _MainPageState extends State<MainPage> {
         child: AppBar(
           backgroundColor: const Color(0xFFA30000),
           iconTheme: const IconThemeData(color: Colors.white),
+          automaticallyImplyLeading: false,
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4.0),
             child: Container(
