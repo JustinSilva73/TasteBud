@@ -151,7 +151,6 @@ class _MainPageState extends State<MainPage> {
     List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
         Restaurant.fromJson(json)).toList();
     return fetchedRestaurants;
-    return null;
   }
 
   Future<void> _loadPositionFromStorage() async {
@@ -367,10 +366,10 @@ class _MainPageState extends State<MainPage> {
                     Position position = snapshot.data!;
 
                     return GoogleMap(
+                      polylines: _polylines,
                       onMapCreated: (GoogleMapController controller) {
                         mapController =
                             controller; // Storing the map controller for future use.
-
                         // If there are any restaurants fetched before the map was created, we should set the bounds immediately.
                         if (restaurants.isNotEmpty &&
                             _currentPosition != null) {
@@ -471,8 +470,14 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _handleMarkerCallback(LatLng location, String restaurantName, int index) async {
+    print("Marker callback initiated for restaurant: $restaurantName");
+
+    // Immediately clear existing markers and add the new one
     setState(() {
+      print("Clearing existing markers.");
       _restaurantMarkers.clear(); // Clear existing markers
+
+      print("Adding new marker for restaurant.");
       _restaurantMarkers.add(
         Marker(
           markerId: MarkerId(restaurantName),
@@ -481,43 +486,91 @@ class _MainPageState extends State<MainPage> {
             title: restaurantName,
             snippet: 'Click to view details',
           ),
-          onTap: () async {
-            // Fetch route information from backend
-            final Uri backendUri = Uri.parse('https://maps.googleapis.com/maps/api/directions/json'
-            '&key = AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc'
-            '&destination = $Restaurant.location'
-            '&origin = $_currentPosition');
-
-            final response = await http.get(backendUri);
-
-            if (response.statusCode == 200) {
-              // Parse the response and extract route information
-              // Assuming your backend response contains polyline coordinates
-              final List<dynamic> routeCoordinates = jsonDecode(response.body);
-
-              // Update the UI to display the route on the map
-              setState(() {
-                // Add polyline to map
-                _polylines.clear(); // Clear existing polylines
-                _polylines.add(Polyline(
-                    polylineId: PolylineId('route'),
-                    points: routeCoordinates.map((coord) => LatLng(coord['latitude'], coord['longitude'])).toList(),
-                    color: Colors.blue, // Set color of polyline
-                    width: 5, // Set width of polyline
-                  ),
-                );
-              });
-            } else {
-              // Handle error
-              print('Failed to fetch route from backend');
-            }
-          },
         ),
       );
-      mapController?.animateCamera(CameraUpdate.newLatLngZoom(
-          location, 11.25)); // Adjust the zoom level as needed
+    });
+
+    // After adding the marker, directly fetch and display the route
+    print("Fetching route.");
+    await _fetchAndDisplayRoute(location);
+
+    // Adjust camera zoom if necessary
+    print("Camera zoom adjusted.");
+    mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 11.25));
+
+    // Debug print to confirm the state update and polyline addition
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("setState completed.");
+      print("Current polyline count: ${_polylines.length}");
     });
   }
+
+  Future<void> _fetchAndDisplayRoute(LatLng destinationLocation) async {
+    // Construct the request URL for your backend endpoint
+    final Uri backendUri = Uri.parse("http://10.0.2.2:3000/routing/directions")
+        .replace(queryParameters: {
+      "originLat": _currentPosition?.latitude.toString(),
+      "originLng": _currentPosition?.longitude.toString(),
+      "destinationLat": destinationLocation.latitude.toString(),
+      "destinationLng": destinationLocation.longitude.toString(),
+    });
+
+    print("Constructed URI for route: $backendUri");
+    try {
+      final response = await http.get(backendUri);
+      print("Response status code: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("Successfully fetched route from backend.");
+        final data = jsonDecode(response.body);
+        final List<dynamic> points = data['points'];
+
+        // Directly assign newPolyline within setState to ensure it's always assigned before use
+        setState(() {
+          _polylines.clear(); // Clear existing polylines
+          var newPolyline = Polyline(
+            polylineId: PolylineId('route'),
+            points: points.map((p) => LatLng(p['lat'], p['lng'])).toList(),
+            color: Colors.blue,
+            width: 5,
+          );
+          _polylines.add(newPolyline);
+          print("Polylines updated with new route. Polyline ID: ${newPolyline.polylineId}, Points Count: ${newPolyline.points.length}");
+
+          // Since newPolyline is now within setState, call focus method here
+          _focusCameraOnPolyline(newPolyline);
+        });
+      } else {
+        print('Failed to fetch route from backend: ${response.body}');
+      }
+    } catch (e) {
+      print('Exception caught when fetching route: $e');
+    }
+  }
+
+  void _focusCameraOnPolyline(Polyline polyline) {
+    final LatLngBounds bounds = _latLngBoundsFromPolyline(polyline);
+    print("Focusing camera on polyline with bounds: ${bounds.toString()}");
+    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50))
+        .then((_) => print("Camera animation completed."))
+        .catchError((e) => print("Failed to animate camera: $e"));
+  }
+  LatLngBounds _latLngBoundsFromPolyline(Polyline polyline) {
+    double? southwestLat = 90.0, southwestLng = 180.0;
+    double? northeastLat = -90.0, northeastLng = -180.0;
+
+    for (LatLng point in polyline.points) {
+      if (point.latitude < southwestLat!) southwestLat = point.latitude;
+      if (point.latitude > northeastLat!) northeastLat = point.latitude;
+      if (point.longitude < southwestLng!) southwestLng = point.longitude;
+      if (point.longitude > northeastLng!) northeastLng = point.longitude;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(southwestLat!, southwestLng!),
+      northeast: LatLng(northeastLat!, northeastLng!),
+    );
+  }
+
 }
 
 // A simple Dart class to represent a restaurant's data.
