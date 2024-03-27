@@ -15,7 +15,7 @@ const prioRoute = require('./routes/Priority/DeterminePrio');
 const auth = require('./routes/Auth/Auth');
 const survey = require('./routes/Survey/survey');
 const userInfo = require('./routes/UserInfo/UserFavorites');    
-
+const directions = require('./routes/Google/GoogleDirectionsLogic');
 app.use('/googleAPI', googleMapsRoutes);
 
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
@@ -26,6 +26,8 @@ app.use('/auth',auth);
 app.use('/survey',survey);
 
 app.use('/userInfo',userInfo);
+
+app.use('/routing', directions);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
