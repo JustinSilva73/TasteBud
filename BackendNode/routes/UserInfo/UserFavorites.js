@@ -94,16 +94,28 @@ router.post('/pos', async (req, res) => {
             return res.status(500).json({ error: 'Failed to connect to the database' });
         }
         console.log('user_id:', user_id);
-        console.log(yelpRes.yelpID, yelpRes.categories)
-        let american = yelpRes.categories.indexOf('American (New)') != -1 || yelpRes.categories.indexOf('American (Traditional)') != -1 ? 1 : 0;
-        let italian = yelpRes.categories.indexOf('Italian') != -1 ? 1 : 0;
-        let chinese = yelpRes.categories.indexOf('Chinese') != -1 ? 1 : 0;
-        let japanese = yelpRes.categories.indexOf('Japanese') != -1 ? 1 : 0;
-        let mexican = yelpRes.categories.indexOf('Mexican') != -1 ? 1 : 0;
-        let indian = yelpRes.categories.indexOf('Indian') != -1 ? 1 : 0;
-        let mediterranean = yelpRes.categories.indexOf('Mediterranean') != -1 ? 1 : 0;
-        let thai = yelpRes.categories.indexOf('Thai') != -1 ? 1 : 0;
-        const query = `UPDATE tastebud.CuisineWeights 
+        if (yelpRes) {
+            console.log('recent restaurant', yelpRes.yelpID, yelpRes.categories)
+            const queryRecentRes = `INSERT INTO tastebud.RecentRestaurants (userID, restaurantName, yelpID)
+                                    VALUES (?, ?, ?)`
+            db.query(queryRecentRes, [user_id, yelpRes.name, yelpRes.yelpID], (err, results) => {
+                if (err) {
+                    console.log('Error:', err);
+                    res.status(500).json({ error: err });
+                    closeConnection(db);
+                    return;
+                }
+            });
+
+            let american = yelpRes.categories.indexOf('American (New)') != -1 || yelpRes.categories.indexOf('American (Traditional)') != -1 ? 1 : 0;
+            let italian = yelpRes.categories.indexOf('Italian') != -1 ? 1 : 0;
+            let chinese = yelpRes.categories.indexOf('Chinese') != -1 ? 1 : 0;
+            let japanese = yelpRes.categories.indexOf('Japanese') != -1 ? 1 : 0;
+            let mexican = yelpRes.categories.indexOf('Mexican') != -1 ? 1 : 0;
+            let indian = yelpRes.categories.indexOf('Indian') != -1 ? 1 : 0;
+            let mediterranean = yelpRes.categories.indexOf('Mediterranean') != -1 ? 1 : 0;
+            let thai = yelpRes.categories.indexOf('Thai') != -1 ? 1 : 0;
+            const query = `UPDATE tastebud.CuisineWeights 
                                SET  american_weight = american_weight + ${american}, 
                                     italian_weight = italian_weight + ${italian}, 
                                     chinese_weight = chinese_weight + ${chinese}, 
@@ -114,16 +126,17 @@ router.post('/pos', async (req, res) => {
                                     thai_weight = thai_weight + ${thai} 
                                WHERE user_id = ?`;
 
-        db.query(query, [user_id], (err, results) => {
-            if (err) {
-                console.log('Error:', err);
-                res.status(500).json({ error: err });
-                closeConnection(db);
-                return;
-            } else {
-                res.json('Success'); // Adjust based on your expected result structure
-            }
-        });
+            db.query(query, [user_id], (err, results) => {
+                if (err) {
+                    console.log('Error:', err);
+                    res.status(500).json({ error: err });
+                    closeConnection(db);
+                    return;
+                } else {
+                    res.json('Success'); // Adjust based on your expected result structure
+                }
+            });
+        }
 
     } catch (error) {
         console.log('Error:', error);

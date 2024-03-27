@@ -30,6 +30,7 @@ const handleYelpResponse = async (options) => {
                 }
             });
             return {
+                name: business.name,
                 yelpID: business.alias,
                 imageUrl: business.image_url,
                 categories: business.categories.map(category => category.title),

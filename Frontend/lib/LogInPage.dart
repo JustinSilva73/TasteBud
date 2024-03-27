@@ -245,8 +245,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future _logPosition(double latitude, double longitude) async {
-    String email = await _loadStoredEmail(); 
-    if (email != "") {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('storedEmail');
+    if (email != null) {
+      print("Logging user position:" + latitude.toString() + "," + longitude.toString());
       return await http.post(
         Uri.parse('http://10.0.2.2:3000/userInfo/pos'),
         headers: {'Content-Type': 'application/json'},
