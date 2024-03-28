@@ -29,6 +29,7 @@ class _MainPageState extends State<MainPage> {
   GoogleMapController? mapController;
   final double maxDistance = 14000; // 5 kilometers in meters
   Set<Polyline> _polylines = {}; // Add this line to define _polylines
+  bool profilePictureAvailable = false;
   @override
   void initState() {
     super.initState();
@@ -328,24 +329,26 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56.0),
-        child: AppBar(
-          backgroundColor: const Color(0xFFA30000),
-          iconTheme: const IconThemeData(color: Colors.white),
-          automaticallyImplyLeading: false,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(4.0),
-            child: Container(
-              color: Colors.black,
-              height: 0.5,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFA30000),
+        iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
+        leading: SizedBox(
+          width: 60, // Fixed width to ensure consistent alignment
+          child: Center(
+            child: CircleAvatar(
+              radius: 16,
+              child: _buildProfileIcon(),
             ),
           ),
-          title: Center(
+        ),
+        title: SizedBox(
+          width: 280,
+          height: 56, // Fixed height to ensure consistent alignment
+          child: Center(
             child: Image.asset(
               'assets/logo.png',
-              // Replace with the correct path for your logo asset
-              height: 60, // Adjust the height as needed
+              height: 56, // Adjust the height as needed
             ),
           ),
         ),
@@ -469,7 +472,27 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-
+  Widget _buildProfileIcon() {
+    // Check if the profile picture is available
+    if (profilePictureAvailable) {
+      return CircleAvatar(
+        backgroundColor: const Color(0xFFA30000),
+        backgroundImage: AssetImage('assets/profile_picture.jpg'), // Replace with the path to your profile picture
+        radius: 18, // Adjust the radius as needed
+      );
+    }  else {
+      // Return a default user icon if profile picture is not available
+      return CircleAvatar(
+        backgroundColor: const Color(0xFFA30000), // Background color
+        child: Icon(
+          Icons.account_circle, // Default user icon
+          size: 28, // Adjust the size as needed
+          color: Colors.white, // Icon color
+        ),
+        radius: 18, // Adjust the radius as needed
+      );
+    }
+  }
   void _handleMarkerCallback(LatLng location, String restaurantName, int index) async {
     print("Marker callback initiated for restaurant: $restaurantName");
 
