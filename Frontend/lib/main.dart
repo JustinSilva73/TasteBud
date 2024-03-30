@@ -5,7 +5,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:tastebud/MainPage.dart';
 import 'package:tastebud/SettingsView.dart';
 import 'SettingsCheckControl.dart';
-// The main entry point of the app.
+import 'ProfileView.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   NotificationService().initNotification();
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,  // The primary color palette of the app.
       ),
-      home: LoginPage(),  // The default route of the app.
+      home: ProfileView(),  // The default route of the app.
     );
   }
 }
