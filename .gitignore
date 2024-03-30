@@ -34,7 +34,7 @@ migrate_working_dir/
 .pub/
 /build/
 /Frontend/build/
-
+/BackendNode/yelpInfo.txt
 app.*.symbols
 
 # Obfuscation related
