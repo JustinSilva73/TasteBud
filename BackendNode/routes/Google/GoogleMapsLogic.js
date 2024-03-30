@@ -52,7 +52,7 @@ router.get('/restaurants', async (req, res) => {
             let yelpDetails;
             try {
                 //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
-                yelpDetails = await getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
+                //yelpDetails = await getYelpRestaurantDetails(place.geometry.location.lat, place.geometry.location.lng, place.name);
                 console.log("YelpDetails: ", yelpDetails);
             } catch (error) {
                 console.error('Error fetching from Yelp API:', error);

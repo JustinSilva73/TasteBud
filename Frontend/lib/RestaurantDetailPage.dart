@@ -211,7 +211,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
   Future<void> setLikeOrDislike() async {
     String email = await _loadStoredEmail(); // Replace this with the actual user ID from your user model or state
     final restaurantName = widget.restaurant.name;
-    final yelpID = widget.restaurant.yelpID; // Ensure your Restaurant model includes a Yelp ID field
+    final yelpID = widget.restaurant.yelpID;
+    final restaurantAddress = widget.restaurant.address;
     print('yelpID:  $yelpID');
     // Determine the like status
     int likeStatus = 0; // Default to 0 (neither liked nor disliked)
@@ -232,7 +233,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
           'email': email,
           'restaurant_name': restaurantName,
           'yelp_id': yelpID,
-          'liked': likeStatus,
+          'likedVal': likeStatus,
+          'restaurant_address': restaurantAddress,
         }),
       );
 
