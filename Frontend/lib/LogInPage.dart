@@ -300,7 +300,20 @@ class _LoginPageState extends State<LoginPage> {
                           if (loginSuccess) {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => const MainPage()),
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) => const MainPage(),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+                                  return SlideTransition(
+                                    position: offsetAnimation,
+                                    child: child,
+                                  );
+                                },
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
