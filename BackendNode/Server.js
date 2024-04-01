@@ -15,6 +15,7 @@ const googleMapsRoutesTest = require('./routes/Google/TGoogleMapsLogic');
 const prioRoute = require('./routes/Priority/DeterminePrio');
 const auth = require('./routes/Auth/Auth');
 const survey = require('./routes/Survey/survey');
+
 const userInfo = require('./routes/UserInfo/UserFavorites');   
 const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 const menu = require('./routes/Restaurant/MenuLogic');
@@ -29,6 +30,8 @@ app.use('/userInfo',userInfo);
 app.use('/restaurant', userRestaurant)
 app.use('/menu', menu);
 app.use('/profile', profile);
+
+app.use('/routing', directions);
 
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });

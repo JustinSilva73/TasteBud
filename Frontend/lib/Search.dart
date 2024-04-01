@@ -34,7 +34,7 @@ class _SearchPageState extends State<SearchPage> {
   void _signOutAndRestartApp() {
     // Navigate to the Startup page and remove all routes beneath
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => MyApp()),
+      MaterialPageRoute(builder: (context) => const MyApp()),
           (Route<dynamic> route) => false,
     );
   }
@@ -61,10 +61,6 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
                   Expanded(
                     child: TextField(
                       onChanged: _updateSearchText,
@@ -80,11 +76,6 @@ class _SearchPageState extends State<SearchPage> {
                         prefixIcon: Icon(Icons.search, color: Colors.grey[800]),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Color(0xFFA30000)),
-                    onPressed: _signOutAndRestartApp,
-                    tooltip: 'Sign Out',
                   ),
                 ],
               ),
@@ -190,7 +181,7 @@ class _SearchPageState extends State<SearchPage> {
               break;
           }
         },
-        selectedItemColor: Color(0xFFA30000),
+        selectedItemColor: const Color(0xFFA30000),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

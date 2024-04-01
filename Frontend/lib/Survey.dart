@@ -48,7 +48,7 @@ class _SurveyPageState extends State<SurveyPage> {
   List<Question> questions = surveyQuestions; // Initialize immediately
   int _currentPage = 0;  // Initialize _currentPage
   String? storedEmail;
-
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -70,6 +70,10 @@ class _SurveyPageState extends State<SurveyPage> {
 
 
   Future<void> submitAllAnswers() async {
+    setState(() {
+      _isLoading = true; // Set isLoading to true when submitting answers
+    });
+
     // Here we'll store the answers in the format that the backend expects.
     List<String> priceAnswers = [];
     List<String> distanceAnswers = [];
@@ -108,16 +112,33 @@ class _SurveyPageState extends State<SurveyPage> {
     );
 
     if (success) {
-      // Navigate to the MainPage or handle success
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const MainPage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(0.0, 1.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var offsetAnimation = animation.drive(tween);
+            return SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            );
+          },
+        ),
             (Route<dynamic> route) => false,
       );
-    } else {
+    }
+    else {
       // Handle failure
       print('Failed to submit survey data');
     }
+
+    setState(() {
+      _isLoading = false; // Set isLoading to false after submitting answers
+    });
   }
   Map<String, dynamic> mapAnswersToColumnNames(List<String> selectedPrices, List<String> selectedDistances, List<String> selectedCuisines) {
     Map<String, dynamic> mappedData = {
@@ -221,22 +242,40 @@ class _SurveyPageState extends State<SurveyPage> {
     double questionTopPadding = screenHeight * 0.1678;
 
     return Scaffold(
-      body: Container(
+      body: _isLoading
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'Analyzing your tastes',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 20),
+            CircularProgressIndicator(), // Loading indicator
+          ],
+        ),
+      )
+          : Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.black.withOpacity(0.1),  // Darker color for the shadow at the edges
-              Colors.white,                   // Middle color for the center of the container
+              Colors.black.withOpacity(0.1), // Darker color for the shadow at the edges
+              Colors.white, // Middle color for the center of the container
               Colors.white,
-              Colors.black.withOpacity(0.1),  // Darker color for the shadow at the edges
+              Colors.black.withOpacity(0.1), // Darker color for the shadow at the edges
             ],
             stops: const [
-              0.0,  // Start of the gradient
+              0.0, // Start of the gradient
               0.05, // Start transitioning to the next color quickly
               0.95, // Start transitioning back to darker color near the end
-              1.0   // End of the gradient
+              1.0 // End of the gradient
             ],
           ),
         ),
@@ -254,21 +293,34 @@ class _SurveyPageState extends State<SurveyPage> {
             }
           },
           itemCount: questions.length,
-          itemBuilder: (context, index) => buildQuestionPage(questions[index], index, MediaQuery.of(context).size.width, questionTopPadding),
+          itemBuilder: (context, index) =>
+              buildQuestionPage(questions[index], index,
+                  MediaQuery.of(context).size.width, questionTopPadding),
         ),
       ),
     );
   }
 
 
-  Widget buildQuestionPage(Question question, int questionIndex, double screenWidth, double questionTopPadding) {
+
+
+  Widget buildLoadingScreen() {
+    return Center(
+      child: CircularProgressIndicator(), // Display a loading indicator
+    );
+  }
+  Widget buildQuestionPage(Question question, int questionIndex,
+      double screenWidth, double questionTopPadding) {
     int crossAxisCount = question.answers.length <= 4 ? 1 : 2;
     double horizontalMargin = 32.0;
     double buttonSpacing = 12.0;
-    double buttonWidth = (screenWidth - (2 * horizontalMargin) - ((crossAxisCount - 1) * buttonSpacing)) / crossAxisCount;
+    double buttonWidth = (screenWidth - (2 * horizontalMargin) -
+        ((crossAxisCount - 1) * buttonSpacing)) /
+        crossAxisCount;
     double baseRatio = question.answers.length > 4 ? 2.4 : 4;
     double ratioDecreasePerAnswer = 0.001;
-    double buttonHeightRatio = baseRatio - (question.answers.length - 2) * ratioDecreasePerAnswer;
+    double buttonHeightRatio =
+        baseRatio - (question.answers.length - 2) * ratioDecreasePerAnswer;
     buttonHeightRatio = max(buttonHeightRatio, 2.0);
     double buttonHeight = buttonWidth / buttonHeightRatio;
 
@@ -278,7 +330,8 @@ class _SurveyPageState extends State<SurveyPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 20, right: 20, top: questionTopPadding), // Adjusted padding
+              padding: EdgeInsets.only(
+                  left: 20, right: 20, top: questionTopPadding), // Adjusted padding
               child: Container(
                 alignment: Alignment.center,
                 child: Column(
@@ -326,7 +379,9 @@ class _SurveyPageState extends State<SurveyPage> {
                       }),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: question.selectedAnswers.contains(index) ? const Color(0xFF3D0000) : const Color(0xFFA30000),
+                          color: question.selectedAnswers.contains(index)
+                              ? const Color(0xFF3D0000)
+                              : const Color(0xFFA30000),
                           border: Border.all(
                             color: const Color(0xFFA30000), // Red as the border color
                             width: 2,
@@ -337,7 +392,8 @@ class _SurveyPageState extends State<SurveyPage> {
                               color: Colors.black.withOpacity(0.2), // Adjust color opacity for shadow intensity
                               spreadRadius: 1,
                               blurRadius: 4,
-                              offset: const Offset(2, 2), // Changes position of shadow
+                              offset:
+                              const Offset(2, 2), // Changes position of shadow
                             ),
                           ],
                         ),
@@ -367,28 +423,38 @@ class _SurveyPageState extends State<SurveyPage> {
                 visible: question.isAnswerSelected, // Control visibility based on answer selection
                 child: GestureDetector(
                   // Replace the onTap method for the 'Submit' button
-                  onTap: question.isAnswerSelected ? () async {
+                  onTap: question.isAnswerSelected
+                      ? () async {
                     if (questionIndex < questions.length - 1) {
                       setState(() {
                         _currentPage += 1;
                       });
                       _controller.animateToPage(
                         _currentPage,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeIn,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
                       );
                     } else {
                       // Call the function to submit all answers
+                      setState(() {
+                        _isLoading = true; // Show loading indicator
+                      });
                       await submitAllAnswers();
+                      setState(() {
+                        _isLoading = false; // Hide loading indicator
+                      });
                     }
-                  } : null,
+                  }
+                      : null,
                   child: Opacity(
                     opacity: question.isAnswerSelected ? 1.0 : 0.0, // Control the opacity
                     child: Text(
                       questionIndex < questions.length - 1 ? "Next" : "Submit",
                       style: TextStyle(
                         fontSize: 24,
-                        color: question.isAnswerSelected ? const Color(0xFFA30000) : Colors.transparent, // Use transparent color when inactive
+                        color: question.isAnswerSelected
+                            ? const Color(0xFFA30000)
+                            : Colors.transparent, // Use transparent color when inactive
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -398,6 +464,56 @@ class _SurveyPageState extends State<SurveyPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget Build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double questionTopPadding = screenHeight * 0.1678;
+
+    return Scaffold(
+      body: _isLoading
+          ? Center(
+        child: CircularProgressIndicator(), // Loading indicator
+      )
+          : Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.black.withOpacity(0.1), // Darker color for the shadow at the edges
+              Colors.white, // Middle color for the center of the container
+              Colors.white,
+              Colors.black.withOpacity(0.1), // Darker color for the shadow at the edges
+            ],
+            stops: const [
+              0.0, // Start of the gradient
+              0.05, // Start transitioning to the next color quickly
+              0.95, // Start transitioning back to darker color near the end
+              1.0 // End of the gradient
+            ],
+          ),
+        ),
+        child: PageView.builder(
+          controller: _controller,
+          onPageChanged: (index) {
+            if (index > _currentPage) {
+              // Prevent swiping forward
+              _controller.jumpToPage(_currentPage);
+            } else {
+              // Update the current page index when swiping back
+              setState(() {
+                _currentPage = index;
+              });
+            }
+          },
+          itemCount: questions.length,
+          itemBuilder: (context, index) =>
+              buildQuestionPage(questions[index], index,
+                  MediaQuery.of(context).size.width, questionTopPadding),
         ),
       ),
     );

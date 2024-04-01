@@ -86,19 +86,19 @@ Future<void> saveLocationServEnabled(bool enabled) async {
 }
 
 void setNotificationsTap(){
-  saveNotificationsEnabled(notificationsOn as bool);
+  saveNotificationsEnabled(notificationsOn);
 }
 
 void setPopupsTap(){
-  savePopUpEnabled(popUpsOn as bool);
+  savePopUpEnabled(popUpsOn);
 }
 
 void setRemeberLogTap(){
-  saveRememberLogEnabled(rememberLoginOn as bool);
+  saveRememberLogEnabled(rememberLoginOn);
 }
 
 void setLocationServTap(){
-  saveLocationServEnabled(locationServicesOn as bool);
+  saveLocationServEnabled(locationServicesOn);
 }
 
 void EmailTap() {
@@ -135,7 +135,7 @@ void LogoutTap(BuildContext context) async {
   await clearAllPreferences();
   await resetPreferencesToDefaults();
   Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (context) => LoginPage()), // Assuming LoginPage is your login page class
+    MaterialPageRoute(builder: (context) => const LoginPage()), // Assuming LoginPage is your login page class
         (Route<dynamic> route) => false,
   );
 }
@@ -155,11 +155,12 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFEDEDED),
+      backgroundColor: const Color(0xFFEDEDED),
       appBar: AppBar(
-        title: Text('Settings and Privacy'),
+        title: const Text('Settings and Privacy'),
         centerTitle: true, // This centers the title in the AppBar.
-        backgroundColor: Color(0xFFEDEDED),
+        backgroundColor: const Color(0xFFEDEDED),
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         children: <Widget>[
@@ -169,33 +170,33 @@ class _SettingsViewState extends State<SettingsView> {
               ListTileTheme(
                 dense: true,
                   child: ListTile(
-                    title: Text('Email', style:TextStyle(fontSize: 15)),
-                    leading: Icon(Icons.email),
-                    trailing: Icon(Icons.arrow_forward_ios),
+                    title: const Text('Email', style:TextStyle(fontSize: 15)),
+                    leading: const Icon(Icons.email),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () => onTileTap('Email'),
                   )
               ),
               ListTileTheme(
                 dense: true,
                   child: ListTile(
-                    title: Text('Username', style:TextStyle(fontSize: 15)),
-                    leading: Icon(Icons.person),
-                    trailing: Icon(Icons.arrow_forward_ios),
+                    title: const Text('Username', style:TextStyle(fontSize: 15)),
+                    leading: const Icon(Icons.person),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () => onTileTap('Username'),
                   ),
               ),
               ListTileTheme(
                 dense: true,
                   child: ListTile(
-                    title: Text('Password', style:TextStyle(fontSize: 15)),
-                    leading: Icon(Icons.lock),
-                    trailing: Icon(Icons.arrow_forward_ios),
+                    title: const Text('Password', style:TextStyle(fontSize: 15)),
+                    leading: const Icon(Icons.lock),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () => onTileTap('Password'),
                   ),
               ),
             ],
           ),
-          SizedBox(height: 10), // To add space between sections
+          const SizedBox(height: 10), // To add space between sections
           CategoryGroup(
             title: 'App Settings',
             children: [
@@ -204,8 +205,8 @@ class _SettingsViewState extends State<SettingsView> {
                 builder: (context, snapshot) {
                   bool switchValue = snapshot.data ?? true; // Default to true or current state
                   return SwitchListTile(
-                    title: Text('Notifications', style: TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.notifications),
+                    title: const Text('Notifications', style: TextStyle(fontSize: 15)),
+                    secondary: const Icon(Icons.notifications),
                     value: switchValue,
                     activeTrackColor: activeColorSwitch,
                     onChanged: (newValue) async {
@@ -223,8 +224,8 @@ class _SettingsViewState extends State<SettingsView> {
                 builder: (context, snapshot) {
                   bool switchValue = snapshot.data ?? true; // Default to true or current state
                   return SwitchListTile(
-                    title: Text('Pop-ups', style: TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.podcasts_outlined),
+                    title: const Text('Pop-ups', style: TextStyle(fontSize: 15)),
+                    secondary: const Icon(Icons.podcasts_outlined),
                     value: switchValue,
                     activeTrackColor: activeColorSwitch,
                     onChanged: (newValue) async {
@@ -241,8 +242,8 @@ class _SettingsViewState extends State<SettingsView> {
                 builder: (context, snapshot) {
                   bool switchValue = snapshot.data ?? true; // Default to true or current state
                   return SwitchListTile(
-                    title: Text('Remember Log in', style: TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.memory),
+                    title: const Text('Remember Log in', style: TextStyle(fontSize: 15)),
+                    secondary: const Icon(Icons.memory),
                     value: switchValue,
                     activeTrackColor: activeColorSwitch,
                     onChanged: (newValue) async {
@@ -259,8 +260,8 @@ class _SettingsViewState extends State<SettingsView> {
                 builder: (context, snapshot) {
                   bool switchValue = snapshot.data ?? true; // Default to true or current state
                   return SwitchListTile(
-                    title: Text('Location Services', style: TextStyle(fontSize: 15)),
-                    secondary: Icon(Icons.location_on),
+                    title: const Text('Location Services', style: TextStyle(fontSize: 15)),
+                    secondary: const Icon(Icons.location_on),
                     value: switchValue,
                     activeTrackColor: activeColorSwitch,
                     onChanged: (newValue) async {
@@ -284,7 +285,7 @@ class _SettingsViewState extends State<SettingsView> {
                           color: Colors.red, // This sets the text color to red.
                         ),
                       ),
-                      leading: Icon(
+                      leading: const Icon(
                         Icons.logout,
                         color: Color(0xFFFF0000), // Custom red color using hexadecimal color code.
                       ),
@@ -303,7 +304,7 @@ class _SettingsViewState extends State<SettingsView> {
 
           switch (index) {
             case 0:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainPage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainPage()));
               break;
             case 1:
             // Already on Settings, do nothing or perhaps refresh the page
@@ -313,7 +314,7 @@ class _SettingsViewState extends State<SettingsView> {
               break;
           }
         },
-        selectedItemColor: Color(0xFFA30000), // Set the color for the selected item
+        selectedItemColor: const Color(0xFFA30000), // Set the color for the selected item
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -337,7 +338,7 @@ class CategoryGroup extends StatelessWidget {
   final String? title;
   final List<Widget> children;
 
-  CategoryGroup({this.title, required this.children});
+  const CategoryGroup({super.key, this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +386,7 @@ class CategoryGroup extends StatelessWidget {
                     bottom: 0,
                     child: index != children.length - 1 ? Container(
                       height: 1,
-                      color: Color(0xFFC3C3C3),
+                      color: const Color(0xFFC3C3C3),
                     ) : Container(),
                   ),
                 ],
@@ -424,7 +425,7 @@ class CustomListTile extends StatelessWidget {
             children: [
               Icon(icon),
               Text(title),
-              Icon(Icons.arrow_forward_ios),
+              const Icon(Icons.arrow_forward_ios),
             ],
           ),
         ),

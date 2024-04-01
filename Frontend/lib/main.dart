@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'LogInPage.dart';
 import 'package:tastebud/NotificationService.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:tastebud/MainPage.dart';
-import 'package:tastebud/SettingsView.dart';
 import 'SettingsCheckControl.dart';
 import 'ProfileView.dart';
 Future<void> main() async {
@@ -28,12 +26,14 @@ Future<void> main() async {
         dateTime: DateTime(2099, 1, 1, 17, 0, 0));
     print("True");
   }
-  runApp(MyApp());
+  runApp(const MyApp());
 
 }
 
 // MyApp is the top-level widget of your application.
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   // This widget returns the MaterialApp, which provides Material Design visuals.
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Color(0xFFA30000), // Directly use the hex color
       ),
-      home: ProfileView(),  // The default route of the app.
+      home: const LoginPage(),  // The default route of the app.
     );
   }
 }
