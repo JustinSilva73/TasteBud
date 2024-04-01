@@ -16,6 +16,7 @@ const extractLatLngPoints = (data) => {
             route.legs.forEach((leg, legIndex) => {
                 console.log(`Processing leg ${legIndex + 1}/${route.legs.length}`);
                 leg.steps.forEach((step, stepIndex) => {
+
                     // Extract start_location of each step
                     points.push({
                         lat: step.start_location.lat,
@@ -46,6 +47,7 @@ router.get('/directions', async (req, res) => {
     const { originLat, originLng, destinationLat, destinationLng } = req.query;
     console.log('Received request for directions:', { originLat, originLng, destinationLat, destinationLng });
 
+
     try {
         const response = await axios.get(`https://maps.googleapis.com/maps/api/directions/json`, {
             params: {
@@ -59,6 +61,7 @@ router.get('/directions', async (req, res) => {
 
         if (response.data.status !== "OK") {
             console.error('Failed to get directions:', response.data.error_message);
+
             return res.status(500).json({ error: `Failed to get directions: ${response.data.error_message}` });
         }
 
@@ -67,6 +70,7 @@ router.get('/directions', async (req, res) => {
 
         // Log the extracted points
         console.log('Extracted points:', latLngPoints);
+
 
         // Return the extracted points
         res.json({ points: latLngPoints });

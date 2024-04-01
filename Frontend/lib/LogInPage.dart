@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tastebud/MainPage.dart';
@@ -6,7 +5,9 @@ import '/CreateAccount.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:http/http.dart' as http;
+
 const Color primaryColor = Color(0xFFA30000);
 
 // Customize your theme data
@@ -28,6 +29,7 @@ final ThemeData themeData = ThemeData(
     ),
   ),
 );
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -39,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? storedEmail;
-  bool isLoading = true;  // Add this to your _LoginPageState class
+  bool isLoading = true; // Add this to your _LoginPageState class
 
   @override
   void initState() {
@@ -49,6 +51,12 @@ class _LoginPageState extends State<LoginPage> {
       _fetchAndStorePosition();
     });
     isLoading = false;
+    Timer.periodic(const Duration(minutes: 5), (timer) async {
+      Position? position = await determinePosition();
+      if (position != null) {
+        await _logPosition(position.latitude, position.longitude);
+      }
+    });
   }
 
   // Function to save email to local storage
@@ -64,14 +72,16 @@ class _LoginPageState extends State<LoginPage> {
       storedEmail = prefs.getString('storedEmail');
     });
   }
+
   Future<void> _storeRestaurantsLocally(List<Restaurant> restaurants) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> jsonList = restaurants.map((restaurant) => restaurant.toJson()).toList();
+    List<Map<String, dynamic>> jsonList =
+    restaurants.map((restaurant) => restaurant.toJson()).toList();
     String jsonString = jsonEncode(jsonList);
     await prefs.setString('restaurants', jsonString);
+    print("Store restaurants");
+    print('Restaurants:  ${restaurants[0].yelpID}');
   }
-
-
 
   Future<Position?> determinePosition() async {
     bool serviceEnabled;
@@ -118,8 +128,10 @@ class _LoginPageState extends State<LoginPage> {
     final regExp = RegExp(pattern);
     return regExp.hasMatch(email);
   }
+
   bool isValidPassword(String password) {
-    const pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    const pattern =
+        r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
     final regExp = RegExp(pattern);
 
     return regExp.hasMatch(password);
@@ -134,7 +146,8 @@ class _LoginPageState extends State<LoginPage> {
 
         // Fetching restaurants after the position is stored
         LatLng currentLocation = LatLng(position.latitude, position.longitude);
-        List<Restaurant> fetchedRestaurants = await fetchNearbyRestaurantsFromServer(currentLocation);
+        List<Restaurant> fetchedRestaurants =
+        await fetchNearbyRestaurantsFromServer(currentLocation);
         if (fetchedRestaurants.isNotEmpty) {
           // Store fetched restaurants locally
           await _storeRestaurantsLocally(fetchedRestaurants);
@@ -145,12 +158,15 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<List<Restaurant>> fetchNearbyRestaurantsFromServer(LatLng location) async {
+  Future<List<Restaurant>> fetchNearbyRestaurantsFromServer(
+      LatLng location) async {
     // Log just before making the HTTP request to ensure URL and parameters are correct.
-    print('Fetching restaurants from: http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}');
+    print(
+        'Fetching restaurants from: http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}');
 
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}'),
+      Uri.parse(
+          'http://10.0.2.2:3000/googleAPI/restaurants?latitude=${location.latitude}&longitude=${location.longitude}'),
     );
 
     // Log the raw server response for debugging unexpected data structures or values.
@@ -168,7 +184,8 @@ class _LoginPageState extends State<LoginPage> {
           .toList();
 
       // Log after converting the raw JSON data to a list of `Restaurant` objects.
-      print("Mapped ${fetchedRestaurants.length} restaurants from server response.");
+      print(
+          "Mapped ${fetchedRestaurants.length} restaurants from server response.");
 
       // Log and calculate the distance for each restaurant
       for (Restaurant restaurant in fetchedRestaurants) {
@@ -176,17 +193,20 @@ class _LoginPageState extends State<LoginPage> {
         print("Restaurant imageUrl: ${restaurant.imageUrl}");
 
         double distanceInMeters = Geolocator.distanceBetween(
-          location.latitude, location.longitude,
-          restaurant.location.latitude, restaurant.location.longitude,
+          location.latitude,
+          location.longitude,
+          restaurant.location.latitude,
+          restaurant.location.longitude,
         );
-        double distanceInMiles = distanceInMeters / 1609.34;  // Convert to miles
+        double distanceInMiles = distanceInMeters / 1609.34; // Convert to miles
         restaurant.distance = double.parse(distanceInMiles.toStringAsFixed(1));
       }
 
       return fetchedRestaurants;
     } else {
       // Log if the server responds with a status code other than 200.
-      print("Server responded with status code: ${response.statusCode}. Response: ${response.body}");
+      print(
+          "Server responded with status code: ${response.statusCode}. Response: ${response.body}");
 
       print("Failed to fetch restaurants from server");
       return [];
@@ -224,8 +244,18 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-
+  Future _logPosition(double latitude, double longitude) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('storedEmail');
+    if (email != null) {
+      print("Logging user position:" + latitude.toString() + "," + longitude.toString());
+      return await http.post(
+        Uri.parse('http://10.0.2.2:3000/userInfo/pos'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'latitude': latitude, 'longitude': longitude, 'email': email}),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +267,8 @@ class _LoginPageState extends State<LoginPage> {
         appBar: AppBar(
           toolbarHeight: 0, // Ensures the AppBar takes up no space
           elevation: 0, // Removes the shadow
-          backgroundColor: primaryColor, // Sets the AppBar's background color to the theme's primary color
+          backgroundColor:
+          primaryColor, // Sets the AppBar's background color to the theme's primary color
         ),
         body: SafeArea(
           top: true,
@@ -263,7 +294,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      // Password Input
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
@@ -296,6 +326,7 @@ class _LoginPageState extends State<LoginPage> {
                           }
 
                           bool loginSuccess = await _attemptLogin(username, password);
+
 
                           if (loginSuccess) {
                             Navigator.pushReplacement(
@@ -359,6 +390,7 @@ class _LoginPageState extends State<LoginPage> {
                                 );
                               },
                             ),
+
                           );
                         },
                         child: const Text("Create an Account"),
@@ -401,7 +433,6 @@ class WaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height - 20);
-
     var firstControlPoint = Offset(size.width / 4, size.height - 10);
     var firstEndPoint = Offset(size.width / 2.25, size.height - 30.0);
     path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
@@ -410,6 +441,7 @@ class WaveClipper extends CustomClipper<Path> {
     var secondControlPoint =
     Offset(size.width - (size.width / 3.25), size.height - 55);
     var secondEndPoint = Offset(size.width, size.height - 50);
+
     path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
         secondEndPoint.dx, secondEndPoint.dy);
 

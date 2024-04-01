@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tastebud/TodayPop.dart';
 import 'SettingsView.dart';
-
+import 'ProfileView.dart';
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -147,11 +147,11 @@ class _MainPageState extends State<MainPage> {
   Future<List<Restaurant>?> fetchStoredRestaurants() async {
     final prefs = await SharedPreferences.getInstance();
     String? jsonString = prefs.getString('restaurants');
-
     List<dynamic> jsonList = jsonDecode(jsonString!);
     List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
         Restaurant.fromJson(json)).toList();
     return fetchedRestaurants;
+
   }
 
   Future<void> _loadPositionFromStorage() async {
@@ -349,6 +349,13 @@ class _MainPageState extends State<MainPage> {
             child: Image.asset(
               'assets/logo.png',
               height: 56, // Adjust the height as needed
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4.0),
+            child: Container(
+              color: Colors.black,
+              height: 0.5,
             ),
           ),
         ),
@@ -611,6 +618,7 @@ class Restaurant {
   final bool? openingHours;
   double? distance;
   double? totalPoints;
+  String? yelpID;
 
   Restaurant({
     required this.name,
@@ -625,6 +633,7 @@ class Restaurant {
     this.openingHours,
     this.distance,
     this.totalPoints,
+    this.yelpID
   });
 
   // Convert JSON to Restaurant object
@@ -641,7 +650,8 @@ class Restaurant {
       icon: json['icon'],
       openingHours: json['opening_hours'] as bool?,
       distance: json['distance']?.toDouble(),
-      totalPoints: json['totalPoints']?.toDouble() ?? 0, // Set to 0 if null or not present
+      totalPoints: json['totalPoints']?.toDouble() ?? 0,
+      yelpID: json['yelpID'],
     );
   }
   Map<String, dynamic> toJson() {
@@ -658,7 +668,9 @@ class Restaurant {
       'icon': icon,
       'opening_hours': openingHours,
       'distance': distance,
-      'totalPoints': totalPoints,    };
+      'totalPoints': totalPoints,
+      'yelpID': yelpID
+    };
   }
 }
 class HeaderWidget extends StatelessWidget {
