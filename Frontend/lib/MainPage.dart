@@ -28,7 +28,8 @@ class _MainPageState extends State<MainPage> {
   List<Restaurant> restaurants = [];
   GoogleMapController? mapController;
   final double maxDistance = 14000; // 5 kilometers in meters
-
+  Set<Polyline> _polylines = {}; // Add this line to define _polylines
+  bool profilePictureAvailable = false;
   @override
   void initState() {
     super.initState();
@@ -47,11 +48,13 @@ class _MainPageState extends State<MainPage> {
     if (popUpsEnabled && await _checkTodayPop()) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('todayPopShown', true);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showTodayPop(context));
+      WidgetsBinding.instance.addPostFrameCallback((_) =>
+          _showTodayPop(context));
       print("TodayPopUpShow");
     }
     print("TodayPopUpNotShown");
   }
+
   Future<bool> _checkTodayPop() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool hasShownTodayPop = prefs.getBool('todayPopShown') ?? false;
@@ -98,7 +101,8 @@ class _MainPageState extends State<MainPage> {
                     .totalPoints}');
               }
 
-              setState(() {restaurants = sortedRestaurants;
+              setState(() {
+                restaurants = sortedRestaurants;
               });
             }
         );
@@ -143,15 +147,10 @@ class _MainPageState extends State<MainPage> {
   Future<List<Restaurant>?> fetchStoredRestaurants() async {
     final prefs = await SharedPreferences.getInstance();
     String? jsonString = prefs.getString('restaurants');
-
-    if (jsonString != null) {
-      List<dynamic> jsonList = jsonDecode(jsonString);
-      List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
-          Restaurant.fromJson(json)).toList();
-      print('InFetch: ${fetchedRestaurants[0].yelpID}');
-      return fetchedRestaurants;
-    }
-    return null;
+    List<dynamic> jsonList = jsonDecode(jsonString!);
+    List<Restaurant> fetchedRestaurants = jsonList.map((json) =>
+        Restaurant.fromJson(json)).toList();
+    return fetchedRestaurants;
 
   }
 
@@ -321,7 +320,8 @@ class _MainPageState extends State<MainPage> {
     CameraUpdate zoomIn = CameraUpdate.zoomIn(); // A CameraUpdate to zoom in
     mapController?.animateCamera(zoomIn); // Apply the zoom in
     mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 11.25)); // Then apply the new bounds
+        CameraUpdate.newLatLngBounds(
+            bounds, 11.25)); // Then apply the new bounds
   }
 
 
@@ -329,21 +329,26 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56.0),
-        child: AppBar(
-          backgroundColor: const Color(0xFFA30000),
-          iconTheme: const IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: Icon(Icons.person), // Using the person icon as an example
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileView()));
-            },
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFA30000),
+        iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
+        leading: SizedBox(
+          width: 60, // Fixed width to ensure consistent alignment
+          child: Center(
+            child: CircleAvatar(
+              radius: 16,
+              child: _buildProfileIcon(),
+            ),
           ),
-          title: Center(
+        ),
+        title: SizedBox(
+          width: 280,
+          height: 56, // Fixed height to ensure consistent alignment
+          child: Center(
             child: Image.asset(
               'assets/logo.png',
-              height: 60, // Adjust the height as needed
+              height: 56, // Adjust the height as needed
             ),
           ),
           bottom: PreferredSize(
@@ -372,10 +377,10 @@ class _MainPageState extends State<MainPage> {
                     Position position = snapshot.data!;
 
                     return GoogleMap(
+                      polylines: _polylines,
                       onMapCreated: (GoogleMapController controller) {
                         mapController =
                             controller; // Storing the map controller for future use.
-
                         // If there are any restaurants fetched before the map was created, we should set the bounds immediately.
                         if (restaurants.isNotEmpty &&
                             _currentPosition != null) {
@@ -423,7 +428,8 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Initialize with the index of the currently selected item
+        currentIndex: 0,
+        // Initialize with the index of the currently selected item
         onTap: (index) {
           setState(() {
             // Update the current index to highlight the selected item
@@ -438,7 +444,9 @@ class _MainPageState extends State<MainPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SettingsView(currentIndex: 1, allRestaurants: restaurants),
+                  builder: (_) =>
+                      SettingsView(
+                          currentIndex: 1, allRestaurants: restaurants),
                 ),
               );
               break;
@@ -452,7 +460,8 @@ class _MainPageState extends State<MainPage> {
               break;
           }
         },
-        selectedItemColor: const Color(0xFFA30000), // Set the color for the selected item
+        selectedItemColor: const Color(0xFFA30000),
+        // Set the color for the selected item
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -470,11 +479,36 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
+  Widget _buildProfileIcon() {
+    // Check if the profile picture is available
+    if (profilePictureAvailable) {
+      return CircleAvatar(
+        backgroundColor: const Color(0xFFA30000),
+        backgroundImage: AssetImage('assets/profile_picture.jpg'), // Replace with the path to your profile picture
+        radius: 18, // Adjust the radius as needed
+      );
+    }  else {
+      // Return a default user icon if profile picture is not available
+      return CircleAvatar(
+        backgroundColor: const Color(0xFFA30000), // Background color
+        child: Icon(
+          Icons.account_circle, // Default user icon
+          size: 28, // Adjust the size as needed
+          color: Colors.white, // Icon color
+        ),
+        radius: 18, // Adjust the radius as needed
+      );
+    }
+  }
+  void _handleMarkerCallback(LatLng location, String restaurantName, int index) async {
+    print("Marker callback initiated for restaurant: $restaurantName");
 
-  void _handleMarkerCallback(LatLng location, String restaurantName,
-      int index) async {
+    // Immediately clear existing markers and add the new one
     setState(() {
+      print("Clearing existing markers.");
       _restaurantMarkers.clear(); // Clear existing markers
+
+      print("Adding new marker for restaurant.");
       _restaurantMarkers.add(
         Marker(
           markerId: MarkerId(restaurantName),
@@ -483,24 +517,91 @@ class _MainPageState extends State<MainPage> {
             title: restaurantName,
             snippet: 'Click to view details',
           ),
-          onTap: () {
-            // Handle marker tap event
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RestaurantDetailPage(
-                  restaurant: restaurants[index], // Pass the specific restaurant
-                  allRestaurants: restaurants,
-                  currentIndex: 0
-                ),
-              ),
-            );
-          },
         ),
       );
-      mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 11.25)); // Adjust the zoom level as needed
+    });
+
+    // After adding the marker, directly fetch and display the route
+    print("Fetching route.");
+    await _fetchAndDisplayRoute(location);
+
+    // Adjust camera zoom if necessary
+    print("Camera zoom adjusted.");
+    mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 11.25));
+
+    // Debug print to confirm the state update and polyline addition
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("setState completed.");
+      print("Current polyline count: ${_polylines.length}");
     });
   }
+
+  Future<void> _fetchAndDisplayRoute(LatLng destinationLocation) async {
+    // Construct the request URL for your backend endpoint
+    final Uri backendUri = Uri.parse("http://10.0.2.2:3000/routing/directions")
+        .replace(queryParameters: {
+      "originLat": _currentPosition?.latitude.toString(),
+      "originLng": _currentPosition?.longitude.toString(),
+      "destinationLat": destinationLocation.latitude.toString(),
+      "destinationLng": destinationLocation.longitude.toString(),
+    });
+
+    print("Constructed URI for route: $backendUri");
+    try {
+      final response = await http.get(backendUri);
+      print("Response status code: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("Successfully fetched route from backend.");
+        final data = jsonDecode(response.body);
+        final List<dynamic> points = data['points'];
+
+        // Directly assign newPolyline within setState to ensure it's always assigned before use
+        setState(() {
+          _polylines.clear(); // Clear existing polylines
+          var newPolyline = Polyline(
+            polylineId: PolylineId('route'),
+            points: points.map((p) => LatLng(p['lat'], p['lng'])).toList(),
+            color: Colors.blue,
+            width: 5,
+          );
+          _polylines.add(newPolyline);
+          print("Polylines updated with new route. Polyline ID: ${newPolyline.polylineId}, Points Count: ${newPolyline.points.length}");
+
+          // Since newPolyline is now within setState, call focus method here
+          _focusCameraOnPolyline(newPolyline);
+        });
+      } else {
+        print('Failed to fetch route from backend: ${response.body}');
+      }
+    } catch (e) {
+      print('Exception caught when fetching route: $e');
+    }
+  }
+
+  void _focusCameraOnPolyline(Polyline polyline) {
+    final LatLngBounds bounds = _latLngBoundsFromPolyline(polyline);
+    print("Focusing camera on polyline with bounds: ${bounds.toString()}");
+    mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50))
+        .then((_) => print("Camera animation completed."))
+        .catchError((e) => print("Failed to animate camera: $e"));
+  }
+  LatLngBounds _latLngBoundsFromPolyline(Polyline polyline) {
+    double? southwestLat = 90.0, southwestLng = 180.0;
+    double? northeastLat = -90.0, northeastLng = -180.0;
+
+    for (LatLng point in polyline.points) {
+      if (point.latitude < southwestLat!) southwestLat = point.latitude;
+      if (point.latitude > northeastLat!) northeastLat = point.latitude;
+      if (point.longitude < southwestLng!) southwestLng = point.longitude;
+      if (point.longitude > northeastLng!) northeastLng = point.longitude;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(southwestLat!, southwestLng!),
+      northeast: LatLng(northeastLat!, northeastLng!),
+    );
+  }
+
 }
 
 // A simple Dart class to represent a restaurant's data.
@@ -611,13 +712,14 @@ class RestaurantItem extends StatelessWidget {
       child: ExpansionTile(
         title: Row(
           children: [
-            Icon(Icons.restaurant, color: Color(0xFFA30000)), // Change color here
-            SizedBox(width: 8.0),
+            const Icon(Icons.restaurant, color: Colors.red),
+            // Set color for the icon
+            const SizedBox(width: 8.0),
             Text(restaurant.name),
           ],
         ),
         subtitle: Text(restaurant.address),
-        trailing: Icon(Icons.keyboard_arrow_down, color: Color(0xFFA30000)), // Change color here
+        trailing: const Icon(Icons.keyboard_arrow_down, color: Colors.red),
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -628,37 +730,42 @@ class RestaurantItem extends StatelessWidget {
                   children: [
                     Image.network(
                       restaurant.imageUrl,
-                      width: 80,
-                      height: 80,
+                      // Use the actual field containing the image URL
+                      width: 80, // Adjust the width as needed
+                      height: 80, // Adjust the height as needed
                     ),
                   ],
                 ),
-                SizedBox(width: 8.0),
+                const SizedBox(width: 8.0),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.local_dining, color: Color(0xFFA30000)), // Change color here
-                          SizedBox(width: 4.0),
-                          Text('Cuisine: ${restaurant.cuisine}', style: TextStyle(fontSize: 12.0)),
+                          const Icon(Icons.local_dining, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Cuisine: ${restaurant.cuisine}',
+                              style: const TextStyle(fontSize: 12.0)),
                         ],
                       ),
-                      SizedBox(height: 4.0),
+                      const SizedBox(height: 4.0),
                       Row(
                         children: [
-                          Icon(Icons.attach_money, color: Color(0xFFA30000)), // Change color here
-                          SizedBox(width: 4.0),
-                          Text('Price: ${restaurant.priceLevel}', style: TextStyle(fontSize: 12.0)),
+                          const Icon(Icons.attach_money, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Price: ${restaurant.priceLevel}',
+                              style: const TextStyle(fontSize: 12.0)),
                         ],
                       ),
-                      SizedBox(height: 4.0),
+                      const SizedBox(height: 4.0),
                       Row(
                         children: [
-                          Icon(Icons.directions, color: Color(0xFFA30000)), // Change color here
-                          SizedBox(width: 4.0),
-                          Text('Distance: ${restaurant.distance?.toString() ?? 'Unknown'} miles', style: TextStyle(fontSize: 12.0)),
+                          const Icon(Icons.directions, color: Colors.red),
+                          const SizedBox(width: 4.0),
+                          Text('Distance: ${restaurant.distance?.toString() ??
+                              'Unknown'} miles', style: const TextStyle(
+                              fontSize: 12.0)),
                         ],
                       ),
                     ],
@@ -667,8 +774,8 @@ class RestaurantItem extends StatelessWidget {
                 Column(
                   children: [
                     SizedBox(
-                      width: 90,
-                      height: 50,
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -677,23 +784,26 @@ class RestaurantItem extends StatelessWidget {
                               builder: (context) => RestaurantDetailPage(
                                 restaurant: restaurant,
                                 allRestaurants: allRestaurants,
-                                currentIndex: 0,
+                                currentIndex: 0,// Use the passed list
                               ),
                             ),
                           );
                         },
-                        child: Text('More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
+                        child: const Text(
+                            'More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
                       ),
                     ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                     SizedBox(
-                      width: 90,
-                      height: 50,
+                      width: 90, // Adjust the width of the button
+                      height: 50, // Adjust the height of the button
                       child: ElevatedButton(
                         onPressed: () {
-                          handleMarkerCallback(restaurant.location, restaurant.name);
+                          handleMarkerCallback(
+                              restaurant.location, restaurant.name);
                         },
-                        child: Text('Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
+                        child: const Text(
+                            'Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
                       ),
                     ),
                   ],

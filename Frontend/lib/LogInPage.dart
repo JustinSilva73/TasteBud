@@ -271,15 +271,12 @@ class _LoginPageState extends State<LoginPage> {
           primaryColor, // Sets the AppBar's background color to the theme's primary color
         ),
         body: SafeArea(
-          // SafeArea is applied here to avoid the status bar
           top: true,
           child: Column(
             children: [
               // Logo
               HeaderWidget(
-                height: isKeyboardOpen
-                    ? screenHeight * 0.15
-                    : screenHeight * 0.3 + 20,
+                height: isKeyboardOpen ? screenHeight * 0.15 : screenHeight * 0.3 + 20,
               ),
               // Username Input
               const SizedBox(height: 30),
@@ -297,8 +294,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-
-                      // Password Input
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
@@ -308,50 +303,69 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-
                       // Login Button
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white, backgroundColor: primaryColor,
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () async {
+                        onPressed: isLoading ? null : () async {
+                          setState(() {
+                            isLoading = true;
+                          });
                           String username = _usernameController.text;
                           String password = _passwordController.text;
 
                           if (!isValidPassword(password)) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Invalid username or password format')),
+                              const SnackBar(content: Text('Invalid username or password format')),
                             );
+                            setState(() {
+                              isLoading = false;
+                            });
                             return;
                           }
 
-                          bool loginSuccess =
-                          await _attemptLogin(username, password);
+                          bool loginSuccess = await _attemptLogin(username, password);
+
 
                           if (loginSuccess) {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const MainPage()),
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) => const MainPage(),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+                                  return SlideTransition(
+                                    position: offsetAnimation,
+                                    child: child,
+                                  );
+                                },
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Incorrect login credentials')),
+                              const SnackBar(content: Text('Incorrect login credentials')),
                             );
+                            setState(() {
+                              isLoading = false;
+                            });
                           }
                         },
-                        child: const Text("Log In"),
+                        child: isLoading
+                            ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                            : const Text("Log In"),
                       ),
-
                       const SizedBox(height: 20),
-
                       // Create Account Button
                       TextButton(
                         style: TextButton.styleFrom(
@@ -360,9 +374,23 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                const CreateAccountPage()), // Assumes you have a CreateAccountPage widget
+                            PageRouteBuilder(
+                              pageBuilder: (_, __, ___) => const CreateAccountPage(),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                const begin = Offset(1.0, 0.0);
+                                const end = Offset.zero;
+                                const curve = Curves.easeInOut;
+
+                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                var offsetAnimation = animation.drive(tween);
+
+                                return SlideTransition(
+                                  position: offsetAnimation,
+                                  child: child,
+                                );
+                              },
+                            ),
+
                           );
                         },
                         child: const Text("Create an Account"),
@@ -382,50 +410,44 @@ class _LoginPageState extends State<LoginPage> {
 class HeaderWidget extends StatelessWidget {
   final double height;
 
-  const HeaderWidget({super.key, required this.height});
+  const HeaderWidget({Key? key, required this.height}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
-        width: double.infinity, // Forces the container to fill the screen width
-        height: height, // Adjust the height as needed
-        color: primaryColor, // Replace with your desired color or gradient
+        width: double.infinity,
+        height: height,
+        color: primaryColor,
         child: Center(
-          child: Image.asset(
-              'assets/logo.png'), // Replace with your logo asset path
+          child: Image.asset('assets/logo.png'),
         ),
       ),
     );
   }
 }
 
-// WaveClipper remains the same, as you provided
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
-    path.lineTo(0, size.height - 20); // Start from the left bottom corner
-
-    // Create the first wave
+    path.lineTo(0, size.height - 20);
     var firstControlPoint = Offset(size.width / 4, size.height - 10);
     var firstEndPoint = Offset(size.width / 2.25, size.height - 30.0);
     path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
         firstEndPoint.dx, firstEndPoint.dy);
 
-    // Increase the `dy` value of the control point to push the curve down
-    var secondControlPoint = Offset(
-        size.width - (size.width / 3.25), size.height - 55); // decreased by 10
-    // Decrease the `dy` value of the end point to pull the end of the wave down
-    var secondEndPoint =
-    Offset(size.width, size.height - 50); // increased by 10
+    var secondControlPoint =
+    Offset(size.width - (size.width / 3.25), size.height - 55);
+    var secondEndPoint = Offset(size.width, size.height - 50);
+
     path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
         secondEndPoint.dx, secondEndPoint.dy);
 
-    // Finish the path by reaching the right bottom corner
     path.lineTo(size.width, size.height);
-    path.lineTo(size.width, 0.0); // Continue to the top right corner
-    path.close(); // Close the path, going back to the starting point (0,0)
+    path.lineTo(size.width, 0.0);
+    path.close();
     return path;
   }
 
