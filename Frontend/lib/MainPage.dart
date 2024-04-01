@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tastebud/TodayPop.dart';
 import 'SettingsView.dart';
-
+import 'ProfileView.dart';
 // MainPage is a stateful widget, meaning its state can change dynamically.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -334,18 +334,23 @@ class _MainPageState extends State<MainPage> {
         child: AppBar(
           backgroundColor: const Color(0xFFA30000),
           iconTheme: const IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: Icon(Icons.person), // Using the person icon as an example
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileView()));
+            },
+          ),
+          title: Center(
+            child: Image.asset(
+              'assets/logo.png',
+              height: 60, // Adjust the height as needed
+            ),
+          ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4.0),
             child: Container(
               color: Colors.black,
               height: 0.5,
-            ),
-          ),
-          title: Center(
-            child: Image.asset(
-              'assets/logo.png',
-              // Replace with the correct path for your logo asset
-              height: 60, // Adjust the height as needed
             ),
           ),
         ),
