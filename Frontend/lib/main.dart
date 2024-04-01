@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:tastebud/LogInPage.dart';
+import 'LogInPage.dart';
 import 'package:tastebud/NotificationService.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'SettingsCheckControl.dart';
-// The main entry point of the app.
+import 'ProfileView.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   NotificationService().initNotification();
@@ -19,7 +19,7 @@ Future<void> main() async {
     NotificationService().scheduleNotification(id: 2,
         title: 'TasteBud',
         body: 'Hey its time to eat',
-        dateTime: DateTime(2024, 3, 14, 3, 50, 0));
+        dateTime: DateTime(2099, 1, 1, 12, 00, 0));
     NotificationService().scheduleNotification(id: 3,
         title: 'TasteBud',
         body: 'Hey its time to eat',
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TasteBud',  // The title of the app, used for the task switcher.
       theme: ThemeData(
-        primarySwatch: Colors.red,  // The primary color palette of the app.
+        primaryColor: Color(0xFFA30000), // Directly use the hex color
       ),
       home: const LoginPage(),  // The default route of the app.
     );
