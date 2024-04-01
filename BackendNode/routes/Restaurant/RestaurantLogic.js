@@ -31,7 +31,7 @@ async function findUserIdByEmail(email) {
 
 router.post('/like', async (req, res) => {
     const { email, restaurant_name, yelp_id, likedVal, restaurant_address } = req.body;
-    console.log("liked:", liked)
+    console.log("liked:", likedVal)
     try {
         const user_id = await findUserIdByEmail(email);
         const db = openConnection();
