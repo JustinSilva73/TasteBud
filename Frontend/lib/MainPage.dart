@@ -337,8 +337,8 @@ class _MainPageState extends State<MainPage> {
           width: 60, // Fixed width to ensure consistent alignment
           child: Center(
             child: CircleAvatar(
-              radius: 16,
-              child: _buildProfileIcon(),
+              radius: 13,
+              child: _buildProfileIcon(context),
             ),
           ),
         ),
@@ -351,12 +351,13 @@ class _MainPageState extends State<MainPage> {
               height: 56, // Adjust the height as needed
             ),
           ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(4.0),
-            child: Container(
-              color: Colors.black,
-              height: 0.5,
-            ),
+        ),
+        // This should be directly inside AppBar
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4.0),
+          child: Container(
+            color: Colors.black,
+            height: 0.5,
           ),
         ),
       ),
@@ -479,27 +480,44 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-  Widget _buildProfileIcon() {
+  Widget _buildProfileIcon(BuildContext context) {
     // Check if the profile picture is available
     if (profilePictureAvailable) {
-      return CircleAvatar(
-        backgroundColor: const Color(0xFFA30000),
-        backgroundImage: AssetImage('assets/profile_picture.jpg'), // Replace with the path to your profile picture
-        radius: 18, // Adjust the radius as needed
-      );
-    }  else {
-      // Return a default user icon if profile picture is not available
-      return CircleAvatar(
-        backgroundColor: const Color(0xFFA30000), // Background color
-        child: Icon(
-          Icons.account_circle, // Default user icon
-          size: 28, // Adjust the size as needed
-          color: Colors.white, // Icon color
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileView()),
+          );
+        },
+        child: CircleAvatar(
+          backgroundColor: const Color(0xFFA30000),
+          backgroundImage: AssetImage('assets/profile_picture.jpg'), // Replace with the path to your profile picture
+          radius: 18, // Adjust the radius as needed
         ),
-        radius: 18, // Adjust the radius as needed
+      );
+    } else {
+      // Return a default user icon if profile picture is not available
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileView()),
+          );
+        },
+        child: CircleAvatar(
+          backgroundColor: const Color(0xFFA30000), // Background color
+          child: Icon(
+            Icons.account_circle, // Default user icon
+            size: 28, // Adjust the size as needed
+            color: Colors.white, // Icon color
+          ),
+          radius: 18, // Adjust the radius as needed
+        ),
       );
     }
   }
+
   void _handleMarkerCallback(LatLng location, String restaurantName, int index) async {
     print("Marker callback initiated for restaurant: $restaurantName");
 

@@ -20,6 +20,7 @@ const userInfo = require('./routes/UserInfo/UserFavorites');
 const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 const menu = require('./routes/Restaurant/MenuLogic');
 const profile = require('./routes/ProfileServices/GetProfileTabs');
+const directions = require('./routes/Google/GoogleDirectionsLogic');
 
 app.use('/googleAPI', googleMapsRoutes);
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
@@ -38,6 +39,5 @@ app.get('/data', (req, res) => {
 });
 
 app.listen(3000, '0.0.0.0', () => {
-    console.log(process.env);
     console.log('Server started on http://0.0.0.0:3000');
 });

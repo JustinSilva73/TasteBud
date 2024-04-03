@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'RestaurantItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileView extends StatefulWidget {
   @override
@@ -43,18 +45,50 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   Future<List<Restaurant>> fetchRecentRestaurants(String email) async {
-    final Uri recentRestaurantsUri = Uri.parse(
-        'http://10.0.2.2:3000/profile/recentVisited?email=$email');
+    final Uri recentRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/recentVisited?email=$email');
     try {
       final response = await http.get(recentRestaurantsUri);
       if (response.statusCode == 200) {
-        List<dynamic> jsonResponse = jsonDecode(response.body);
-        List<Restaurant> recentRestaurants = jsonResponse
-            .map((restaurant) => Restaurant.fromJson(restaurant))
-            .toList();
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        double? storedLatitude = prefs.getDouble('latitude');
+        double? storedLongitude = prefs.getDouble('longitude');
 
-        // Now prioritize the recent restaurants list using fetchRestaurantPrio
-        return recentRestaurants;
+        // Assuming you have a valid current position
+        if (storedLatitude != null && storedLongitude != null) {
+          Position currentPosition = Position(
+              latitude: storedLatitude, longitude: storedLongitude, timestamp: DateTime.now(), altitude: 0, accuracy: 0, heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0, isMocked: false);
+
+          // Handle both a List or a Map response from jsonDecode
+          final jsonResponse = jsonDecode(response.body);
+          List<dynamic> restaurantData;
+          if (jsonResponse is List) {
+            restaurantData = jsonResponse;
+          } else if (jsonResponse is Map) {
+            restaurantData = jsonResponse['keyHoldingRestaurantData'] ?? [];
+          } else {
+            print("Unexpected JSON structure");
+            return [];
+          }
+
+          List<Restaurant> recentRestaurants = restaurantData.map((restaurant) {
+            var rest = Restaurant.fromJson(restaurant as Map<String, dynamic>);
+            // Calculate distance
+            double distanceInMeters = Geolocator.distanceBetween(
+              currentPosition.latitude,
+              currentPosition.longitude,
+              rest.location.latitude,
+              rest.location.longitude,
+            );
+            double distanceInMiles = distanceInMeters / 1609.34; // Convert to miles
+            rest.distance = double.parse(distanceInMiles.toStringAsFixed(1));
+            return rest;
+          }).toList();
+
+          return recentRestaurants;
+        } else {
+          print("Current position is not available.");
+          return []; // Handle this case as needed
+        }
       } else {
         print("Failed to fetch recent restaurants from server");
         return [];
@@ -65,28 +99,44 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     }
   }
 
+
   Future<List<Restaurant>> fetchLikedRestaurants(String email) async {
-    final Uri likedRestaurantsUri = Uri.parse(
-        'http://10.0.2.2:3000/profile/likedRestaurants?email=$email');
+    final Uri likedRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/likedRestaurants?email=$email');
     try {
       final response = await http.get(likedRestaurantsUri);
       if (response.statusCode == 200) {
-        List<dynamic> jsonResponse = jsonDecode(response.body);
-        List<Restaurant> likedRestaurants = jsonResponse
-            .map((restaurant) => Restaurant.fromJson(restaurant))
-            .toList();
+        // Handle both a List or a Map response from jsonDecode
+        final jsonResponse = jsonDecode(response.body);
+        List<dynamic> restaurantData;
+        if (jsonResponse is List) {
+          // If the decoded response is already a List, use it directly
+          restaurantData = jsonResponse;
+        } else if (jsonResponse is Map) {
+          // If it's a Map, extract the List if your JSON structure allows it
+          // For example, if your JSON root object contains a key that holds the restaurant data
+          restaurantData = jsonResponse['keyHoldingRestaurantData'];
+        } else {
+          print("Unexpected JSON structure");
+          return [];
+        }
 
-        // Now prioritize the recent restaurants list using fetchRestaurantPrio
+        List<Restaurant> likedRestaurants = restaurantData.map((restaurant) {
+          var rest = Restaurant.fromJson(restaurant as Map<String, dynamic>);
+          // Calculate distance (rest of your logic)
+          return rest;
+        }).toList();
+
         return likedRestaurants;
       } else {
-        print("Failed to fetch recent restaurants from server");
+        print("Failed to fetch liked restaurants from server");
         return [];
       }
     } catch (error) {
-      print("Error fetching recent restaurants: $error");
+      print("Error fetching liked restaurants: $error");
       return [];
     }
   }
+
 
   Future<String> fetchUsername(String email) async {
     final Uri url = Uri.parse('http://10.0.2.2:3000/profile/username?email=$email');
@@ -117,7 +167,11 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFA30000),
+              ),
+            ),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
@@ -178,7 +232,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                     // Liked Restaurants Tab
                     _buildRestaurantList(likedRestaurants),
                     // Placeholder for the third tab
-                    Center(child: Text('Add Page')),
+                    Center(child: Text('Future User Reviews Page')),
                   ],
                 ),
               ),
