@@ -57,22 +57,31 @@ router.get('/recentVisited', async (req, res) => {
                 return;
             }
 
-            const detailsPromises = results.map(async (restaurant) => {
-                return await fetchAllRestaurantDetails(restaurant, yelpLogic, GOOGLE_MAPS_API_KEY);
-            });
+            if (results.length === 0) {
+                return res.status(404).json({ message: 'No recently visited restaurants found.' });
+            }
 
-            let fetchedDetails = await Promise.all(detailsPromises);
-            // Combine all details into one array, removing any nulls
-            let combinedDetails = fetchedDetails.flat().filter(detail => detail !== null);
+            let successfulDetails = [];
+            for (let result of results) {
+                try {
+                    const detail = await getMoreRestaurantDetails(result.yelpID, yelpLogic);
+                    if (detail !== null) {
+                        successfulDetails.push(detail);
+                    }
+                } catch (error) {
+                        console.error('Error fetching details for Yelp ID', result.yelpID, ':', detail.error);
+                }
+            }
 
-            console.log("Combined results for recent visited restaurants:", combinedDetails);
-            res.json(combinedDetails);
+            console.log("Combined results for recent visited restaurants:", successfulDetails);
+            res.json(successfulDetails);
         });
     } catch (error) {
-        console.error('Error: ', error.message);
+        console.error('Error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 router.get('/likedRestaurants', async (req, res) => {
@@ -95,28 +104,24 @@ router.get('/likedRestaurants', async (req, res) => {
                 return res.status(404).json({ message: 'No liked restaurants found.' });
             }
 
-            // Map over results to fetch enriched details for each restaurant
-            const enrichedDetailsPromises = results.map(result => 
-                getEnrichedRestaurantDetails(result.yelpID, yelpLogic)
-                .catch(error => {
+            let successfulDetails = [];
+            for (let result of results) {
+                try {
+                    const detail = await getMoreRestaurantDetails(result.yelpID, yelpLogic);
+                    if (!detail.error) {
+                        successfulDetails.push(detail);
+                    } else {
+                        // Log or handle individual restaurant fetch errors
+                        console.error('Error fetching details for Yelp ID', result.yelpID, ':', detail.error);
+                    }
+                } catch (error) {
                     console.error('Error fetching details for Yelp ID', result.yelpID, ':', error);
-                    // Optionally handle individual failures, e.g., by returning a special error object
-                    return { error: 'Failed to fetch details', yelpID: result.yelpID };
-                })
-            );
+                    // Optionally handle individual promise rejections, e.g., by logging or adding an error object to successfulDetails
+                }
+            }
 
-            // Wait for all promises to resolve
-            Promise.all(enrichedDetailsPromises)
-                .then(enrichedDetailsArray => {
-                    // Filter out any potential failures if you wish to exclude them from the final response
-                    const successfulDetails = enrichedDetailsArray.filter(detail => !detail.error);
-                    res.json(successfulDetails);
-                })
-                .catch(error => {
-                    // This catch block is for catching any unexpected errors in handling promises
-                    console.error('Unexpected error processing restaurant details:', error);
-                    res.status(500).json({ error: 'Failed to process restaurant details.' });
-                });
+            console.log("Combined results for liked restaurants:", successfulDetails);
+            res.json(successfulDetails);
         });
     } catch (error) {
         console.error('Error:', error.message);
@@ -124,47 +129,50 @@ router.get('/likedRestaurants', async (req, res) => {
     }
 });
 
-
-
-async function getEnrichedRestaurantDetails(yelpID, yelpLogic) {
+async function getMoreRestaurantDetails(yelpID, yelpLogic) {
     try {
-        console.log('Fetching enriched details for Yelp ID:', yelpID);
+        console.log('Fetching more details for Yelp ID:', yelpID);
         const yelpResponse = await yelpLogic.getYelpRestaurantFromID(yelpID);
 
-        // Check if yelpResponse is null or doesn't contain the expected properties
-        if (!yelpResponse || typeof yelpResponse.latitude === 'undefined' || typeof yelpResponse.longitude === 'undefined') {
-            console.error(`Invalid Yelp response for Yelp ID: ${yelpID}`);
-            // Return a placeholder or error object indicating the issue
-            return { error: `Invalid Yelp response for Yelp ID: ${yelpID}`, yelpID: yelpID };
+        if (!yelpResponse || typeof yelpResponse.lat === 'undefined' || typeof yelpResponse.lng === 'undefined') {
+            console.error('yelpResponse is undefined or null, or missing lat/lng properties for Yelp ID:', yelpID);
+            return null; // Or return an error object if that fits your use case better
         }
 
-        // Now that yelpResponse has been validated, proceed with the Google API call
-        const { latitude, longitude } = yelpResponse;
-        const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=24140&type=restaurant&opennow=true&key=${process.env.GOOGLE_MAPS_API_KEY}`);
+        const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${yelpResponse.lat},${yelpResponse.lng}&rankby=distance&type=restaurant&name=${encodeURIComponent(yelpResponse.name)}&opennow=true&key=${GOOGLE_MAPS_API_KEY}`);
 
         if (googleResponse.data.status !== "OK") {
-            throw new Error(`Failed to fetch places: ${googleResponse.data.error_message}`);
+            console.error('Failed to fetch places. Response:', googleResponse.data);
+            throw new Error(`Failed to fetch places. Status: ${googleResponse.data.status}, Error message: ${googleResponse.data.error_message || 'No error message provided'}.`);
         }
 
-        const places = googleResponse.data.results;
-        const enrichedDetails = places.map(place => {
-            // Construct and return each place's details
-            return {
-                business_name: place.name,
-                address: place.vicinity,
-                lat: place.geometry.location.lat,
-                lng: place.geometry.location.lng,
-                rating: place.rating,
-                price_level: place.price_level === 0 || place.price_level === undefined ? 1 : place.price_level,
-                icon: place.icon,
-                opening_hours: place.opening_hours ? place.opening_hours.open_now : null,
-                // You can add more details here if needed
-            };
-        });
+        // Assuming you are interested in the closest result, use the first result directly
+        const place = googleResponse.data.results[0];
+        if (!place) {
+            console.error('No places found for the given criteria');
+            return null;
+        }
 
-        return enrichedDetails;
+        // Directly create the moreDetails object without mapping
+        const moreDetails = {
+            business_name: place.name,
+            address: place.vicinity,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            rating: place.rating,
+            price_level: place.price_level || 1, // Assume price_level 1 if undefined
+            icon: place.icon,
+            opening_hours: place.opening_hours ? place.opening_hours.open_now : false,
+            categories_of_cuisine: yelpResponse.categories.map(category => category.title).join(', '),
+            image_url: yelpResponse.imageUrl,
+            url: yelpResponse.url,
+            yelpID: yelpResponse.yelpID
+        };
+
+        return moreDetails;
     } catch (error) {
-        console.error('Error in getEnrichedRestaurantDetails:', error);
+        console.error('Error in getMoreRestaurantDetails:', error);
+        // Properly log the caught error
         throw error; // Rethrow the error to handle it in the calling function
     }
 }
