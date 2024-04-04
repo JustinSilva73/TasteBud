@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'CreateAccount.dart';
 import 'RestaurantDetailPage.dart';
@@ -521,6 +523,11 @@ class _MainPageState extends State<MainPage> {
   void _handleMarkerCallback(LatLng location, String restaurantName, int index) async {
     print("Marker callback initiated for restaurant: $restaurantName");
 
+    // Calculate the bounds to include both the user's and the restaurant's markers
+    LatLngBounds bounds = _calculateBounds(location);
+
+    // Update camera bounds to include the new bounds
+    _updateCameraBounds(bounds);
     // Immediately clear existing markers and add the new one
     setState(() {
       print("Clearing existing markers.");
@@ -553,7 +560,27 @@ class _MainPageState extends State<MainPage> {
       print("Current polyline count: ${_polylines.length}");
     });
   }
+  LatLngBounds _calculateBounds(LatLng restaurantLocation) {
+    // Get the current position of the user
+    LatLng currentPosition = LatLng(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+    );
 
+    // Create LatLngBounds containing both the user's and the restaurant's locations
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        min(currentPosition.latitude, restaurantLocation.latitude),
+        min(currentPosition.longitude, restaurantLocation.longitude),
+      ),
+      northeast: LatLng(
+        max(currentPosition.latitude, restaurantLocation.latitude),
+        max(currentPosition.longitude, restaurantLocation.longitude),
+      ),
+    );
+
+    return bounds;
+  }
   Future<void> _fetchAndDisplayRoute(LatLng destinationLocation) async {
     // Construct the request URL for your backend endpoint
     final Uri backendUri = Uri.parse("http://10.0.2.2:3000/routing/directions")
