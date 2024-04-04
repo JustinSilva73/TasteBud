@@ -758,9 +758,13 @@ class RestaurantItem extends StatelessWidget {
         title: Row(
           children: [
             const Icon(Icons.restaurant, color: Colors.red),
-            // Set color for the icon
             const SizedBox(width: 8.0),
-            Text(restaurant.name),
+            Expanded(
+              child: Text(
+                restaurant.name,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         subtitle: Text(restaurant.address),
@@ -775,9 +779,8 @@ class RestaurantItem extends StatelessWidget {
                   children: [
                     Image.network(
                       restaurant.imageUrl,
-                      // Use the actual field containing the image URL
-                      width: 80, // Adjust the width as needed
-                      height: 80, // Adjust the height as needed
+                      width: 80,
+                      height: 80,
                     ),
                   ],
                 ),
@@ -819,8 +822,8 @@ class RestaurantItem extends StatelessWidget {
                 Column(
                   children: [
                     SizedBox(
-                      width: 90, // Adjust the width of the button
-                      height: 50, // Adjust the height of the button
+                      width: 90,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -829,7 +832,7 @@ class RestaurantItem extends StatelessWidget {
                               builder: (context) => RestaurantDetailPage(
                                 restaurant: restaurant,
                                 allRestaurants: allRestaurants,
-                                currentIndex: 0,// Use the passed list
+                                currentIndex: 0,
                               ),
                             ),
                           );
@@ -840,8 +843,8 @@ class RestaurantItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4.0),
                     SizedBox(
-                      width: 90, // Adjust the width of the button
-                      height: 50, // Adjust the height of the button
+                      width: 90,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: () {
                           handleMarkerCallback(
