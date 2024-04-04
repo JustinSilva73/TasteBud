@@ -757,7 +757,7 @@ class RestaurantItem extends StatelessWidget {
       child: ExpansionTile(
         title: Row(
           children: [
-            const Icon(Icons.restaurant, color: Colors.red),
+            const Icon(Icons.restaurant, color: const Color(0xFFA30000)),
             const SizedBox(width: 8.0),
             Expanded(
               child: Text(
@@ -768,7 +768,7 @@ class RestaurantItem extends StatelessWidget {
           ],
         ),
         subtitle: Text(restaurant.address),
-        trailing: const Icon(Icons.keyboard_arrow_down, color: Colors.red),
+        trailing: const Icon(Icons.keyboard_arrow_down, color:const Color(0xFFA30000)),
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -791,7 +791,7 @@ class RestaurantItem extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.local_dining, color: Colors.red),
+                          const Icon(Icons.local_dining, color: const Color(0xFFA30000)),
                           const SizedBox(width: 4.0),
                           Text('Cuisine: ${restaurant.cuisine}',
                               style: const TextStyle(fontSize: 12.0)),
@@ -800,7 +800,7 @@ class RestaurantItem extends StatelessWidget {
                       const SizedBox(height: 4.0),
                       Row(
                         children: [
-                          const Icon(Icons.attach_money, color: Colors.red),
+                          const Icon(Icons.attach_money, color: const Color(0xFFA30000)),
                           const SizedBox(width: 4.0),
                           Text('Price: ${restaurant.priceLevel}',
                               style: const TextStyle(fontSize: 12.0)),
@@ -809,7 +809,7 @@ class RestaurantItem extends StatelessWidget {
                       const SizedBox(height: 4.0),
                       Row(
                         children: [
-                          const Icon(Icons.directions, color: Colors.red),
+                          const Icon(Icons.directions, color: const Color(0xFFA30000)),
                           const SizedBox(width: 4.0),
                           Text('Distance: ${restaurant.distance?.toString() ??
                               'Unknown'} miles', style: const TextStyle(
