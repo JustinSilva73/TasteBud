@@ -18,7 +18,7 @@ const survey = require('./routes/Survey/survey');
 const userInfo = require('./routes/UserInfo/UserFavorites');   
 const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 
-app.use('/googleAPI', googleMapsRoutes);
+app.use('/googleAPI', googleMapsRoutes.router);
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
 app.use('/priority',prioRoute);
 app.use('/auth',auth);
