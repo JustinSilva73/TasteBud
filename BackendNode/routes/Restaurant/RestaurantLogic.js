@@ -30,27 +30,7 @@ async function findUserIdByEmail(email) {
 }
 
 router.post('/like', async (req, res) => {
-    const { email, restaurant_name, yelp_id, liked } = req.body;
-
-    console.log('email:', email);
-    console.log('restaurant_name:', restaurant_name);
-    console.log('yelp_id:', yelp_id);
-    console.log('liked:', liked);
-    if (!email) {
-        console.log('Missing a parameter email');
-        return res.status(400).json({ error: 'Missing a parameter' });
-    }
-    if (!restaurant_name ) {
-        console.log('Missing a parameter rest');
-        return res.status(400).json({ error: 'Missing a parameter' });
-    }if (!yelp_id) {
-        console.log('Missing a parameter yelp');
-        return res.status(400).json({ error: 'Missing a parameter' });
-    }
-    if (yelp_id == "No-Yelp-ID"){
-        console.log('No Yelp ID');
-        return res.status(400).json({ error: 'No Yelp ID' });
-    }
+    const { email, restaurant_name, yelp_id, likedVal, restaurant_address } = req.body;
     console.log("liked:", liked)
     try {
         const user_id = await findUserIdByEmail(email);
@@ -60,10 +40,10 @@ router.post('/like', async (req, res) => {
             return res.status(500).json({ error: 'Failed to connect to the database' });
         }
         console.log('user_id:', user_id);
-        let l = liked ? liked : null;
-        let query = `CALL like_restaurant(?, ?, ?, ?);`;
+        let l = likedVal ? likedVal : null;
+        let query = `CALL like_restaurant(?, ?, ?, ?, ?);`;
 
-        db.query(query, [user_id, restaurant_name, yelp_id, l], (err, results) => {
+        db.query(query, [user_id, restaurant_name, yelp_id, l, restaurant_address], (err, results) => {
             if (err) {
                 console.log('Error:', err);
                 res.status(500).json({ error: err });
