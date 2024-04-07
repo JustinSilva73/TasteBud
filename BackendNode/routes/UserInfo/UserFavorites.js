@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const { openConnection, closeConnection } = require('../DatabaseLogic');
+const googleMapsLogic = require('../Google/GoogleMapsLogic');
 const yelpLogic = require('../Yelp/YelpLogic');
 
 const getTopCuisines = async (user_id) => {
@@ -57,6 +58,23 @@ const getUserID = async (email) => {
     });
 };
 
+const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+    var dLon = deg2rad(lon2-lon1); 
+    var a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+      ; 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c; // Distance in km
+    return d;
+  }
+  
+  function deg2rad(deg) {
+    return deg * (Math.PI/180)
+  }
 
 router.get('/top_cuisines/:user_id', async (req, res) => {
     try {
@@ -87,7 +105,29 @@ router.post('/pos', async (req, res) => {
 
     try {
         const user_id = await getUserID(email);
-        const yelpRes = await yelpLogic.getYelpRestaurantFromPosition(latitude, longitude);
+        const places = await googleMapsLogic.searchNearByRestaurants(latitude, longitude, 10);
+
+        let closestRestaurant;
+        let min = null;
+        for (let place of places) {
+            const dist = getDistanceFromLatLonInKm(place.lat, place.lng, latitude, longitude);
+            if (min == null || dist < min){
+                closestRestaurant = place;
+                min = dist
+            }
+        }
+        
+        if (closestRestaurant) {
+        let yelpRes;
+        try {
+            //UNCOMMENT BELOW TO GET YELP DETAILS WORKING
+            yelpRes = await yelpLogic.getYelpRestaurantDetails(closestRestaurant.lat, closestRestaurant.lng, closestRestaurant.business_name);
+            console.log("YelpDetails: ", yelpRes);
+        } catch (error) {
+            console.error('Error fetching from Yelp API:', error);
+        }
+
+        // const yelpRes = await yelpLogic.getYelpRestaurantFromPosition(latitude, longitude);
         const db = openConnection();
         if (!db) {
             console.log('Failed to connect to the database');
@@ -137,6 +177,11 @@ router.post('/pos', async (req, res) => {
                 }
             });
         }
+    }
+    else {
+        console.log('No restaurant found in the area.')
+        res.json('Success');
+    }
 
     } catch (error) {
         console.log('Error:', error);
