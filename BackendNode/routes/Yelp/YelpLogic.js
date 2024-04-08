@@ -31,10 +31,11 @@ const handleYelpResponse = async (options) => {
             });
             return {
                 name: business.name,
+                address: business.location.address1,
                 yelpID: business.alias,
                 imageUrl: business.image_url,
                 categories: business.categories.map(category => category.title),
-                url: business.url
+                url: business.url,
             };
 
         } else {
@@ -91,6 +92,45 @@ const getYelpRestaurantFromPosition = async (latitude, longitude) => {
     return handleYelpResponse(options);
 };
 
+const getYelpRestaurantFromID = async (yelpID) => {
+    console.log('Fetching Yelp details for ID:', yelpID);
+    try {
+        const response = await axios.get(`https://api.yelp.com/v3/businesses/${yelpID}`, {
+            headers: {
+                'Authorization': `Bearer ${process.env.YELP_API_KEY}`,
+                'accept': 'application/json',
+            }
+        });
+        
+        const business = response.data; // This represents the business detail
+        
+        console.log('Yelp business:', business.alias, business.name, business.location.address1);
+        console.log('Yelp passed in ID:', yelpID)
+
+        if (business.alias !== yelpID) {
+            console.log(`Mismatched yelpID. Expected: ${yelpID}, Found: ${business.alias}`);
+            return null; // Return null if the yelpIDs do not match
+        }
+
+        const structuredResponse = {
+            name: business.name,
+            address: business.location.address1,
+            yelpID: business.alias,
+            imageUrl: business.image_url,
+            categories: business.categories.map(category => category.title),
+            url: business.url,
+            lat: business.coordinates.latitude,
+            lng: business.coordinates.longitude,
+        };
+        
+        console.log('Yelp structured response:', structuredResponse);
+        return structuredResponse;
+    } catch (error) {
+        console.error('Error fetching from Yelp API:', error.response ? error.response.data : error);
+        throw error; // Rethrow or handle as needed
+    }
+};
+
 
 /*
 router.get('/restaurantDetails', async (req, res) => {
@@ -122,4 +162,4 @@ router.get('/restaurantDetails', async (req, res) => {
 });
 */
 
-module.exports = {getYelpRestaurantDetails, getYelpRestaurantFromPosition};
+module.exports = { getYelpRestaurantDetails, getYelpRestaurantFromPosition, getYelpRestaurantFromID };
