@@ -65,7 +65,6 @@ const handleYelpResponse = async (options) => {
     }
 }
 
-
 const getYelpRestaurantDetails = async (latitude, longitude, restaurantName) => {
     const options = {
         method: 'GET',
