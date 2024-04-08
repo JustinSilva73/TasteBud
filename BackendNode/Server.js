@@ -15,10 +15,12 @@ const googleMapsRoutesTest = require('./routes/Google/TGoogleMapsLogic');
 const prioRoute = require('./routes/Priority/DeterminePrio');
 const auth = require('./routes/Auth/Auth');
 const survey = require('./routes/Survey/survey');
+
 const userInfo = require('./routes/UserInfo/UserFavorites');   
 const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 const menu = require('./routes/Restaurant/MenuLogic');
 const profile = require('./routes/ProfileServices/GetProfileTabs');
+const directions = require('./routes/Google/GoogleDirectionsLogic');
 
 app.use('/googleAPI', googleMapsRoutes.router);
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
@@ -30,11 +32,12 @@ app.use('/restaurant', userRestaurant)
 app.use('/menu', menu);
 app.use('/profile', profile);
 
+app.use('/routing', directions);
+
 app.get('/data', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
 app.listen(3000, '0.0.0.0', () => {
-    console.log(process.env);
     console.log('Server started on http://0.0.0.0:3000');
 });

@@ -135,10 +135,10 @@ router.post('/pos', async (req, res) => {
         }
         console.log('user_id:', user_id);
         if (yelpRes) {
-            console.log('recent restaurant', yelpRes.yelpID, yelpRes.categories)
-            const queryRecentRes = `INSERT INTO tastebud.RecentRestaurants (userID, restaurantName, yelpID)
-                                    VALUES (?, ?, ?)`
-            db.query(queryRecentRes, [user_id, yelpRes.name, yelpRes.yelpID], (err, results) => {
+            console.log('recent restaurant', yelpRes.yelpID, yelpRes.categories, yelpRes.address)
+            const queryRecentRes = `INSERT INTO tastebud.RecentRestaurants (userID, restaurantName, yelpID, restaurantAddress)
+                                    VALUES (?, ?, ?, ?)`
+            db.query(queryRecentRes, [user_id, yelpRes.name, yelpRes.yelpID,  yelpRes.address], (err, results) => {
                 if (err) {
                     console.log('Error:', err);
                     res.status(500).json({ error: err });
