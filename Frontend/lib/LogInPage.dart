@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _storeRestaurantsLocally(List<Restaurant> restaurants) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<Map<String, dynamic>> jsonList =
-    restaurants.map((restaurant) => restaurant.toJson()).toList();
+        restaurants.map((restaurant) => restaurant.toJson()).toList();
     String jsonString = jsonEncode(jsonList);
     await prefs.setString('restaurants', jsonString);
     print("Store restaurants");
@@ -268,15 +268,18 @@ class _LoginPageState extends State<LoginPage> {
           toolbarHeight: 0, // Ensures the AppBar takes up no space
           elevation: 0, // Removes the shadow
           backgroundColor:
-          primaryColor, // Sets the AppBar's background color to the theme's primary color
+              primaryColor, // Sets the AppBar's background color to the theme's primary color
         ),
         body: SafeArea(
+          // SafeArea is applied here to avoid the status bar
           top: true,
           child: Column(
             children: [
               // Logo
               HeaderWidget(
-                height: isKeyboardOpen ? screenHeight * 0.15 : screenHeight * 0.3 + 20,
+                height: isKeyboardOpen
+                    ? screenHeight * 0.15
+                    : screenHeight * 0.3 + 20,
               ),
               // Username Input
               const SizedBox(height: 30),

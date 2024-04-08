@@ -22,7 +22,7 @@ const menu = require('./routes/Restaurant/MenuLogic');
 const profile = require('./routes/ProfileServices/GetProfileTabs');
 const directions = require('./routes/Google/GoogleDirectionsLogic');
 
-app.use('/googleAPI', googleMapsRoutes);
+app.use('/googleAPI', googleMapsRoutes.router);
 app.use('/TESTgoogleAPI', googleMapsRoutesTest);
 app.use('/priority',prioRoute);
 app.use('/auth',auth);
