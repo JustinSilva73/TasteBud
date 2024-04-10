@@ -219,7 +219,7 @@ class _MainPageState extends State<MainPage> {
         // Change this if you have unique IDs
         position: restaurant.location,
         infoWindow: InfoWindow(
-            title: restaurant.name, snippet: restaurant.address),
+            title: restaurant.name, snippet: 'Click More Info to view details'),
         // You can also add other properties like icon, etc.
       );
 
