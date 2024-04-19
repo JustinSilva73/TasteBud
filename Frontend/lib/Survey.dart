@@ -243,7 +243,7 @@ class _SurveyPageState extends State<SurveyPage> {
 
     return Scaffold(
       body: _isLoading
-          ? Center(
+          ? const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -304,11 +304,6 @@ class _SurveyPageState extends State<SurveyPage> {
 
 
 
-  Widget buildLoadingScreen() {
-    return Center(
-      child: CircularProgressIndicator(), // Display a loading indicator
-    );
-  }
   Widget buildQuestionPage(Question question, int questionIndex,
       double screenWidth, double questionTopPadding) {
     int crossAxisCount = question.answers.length <= 4 ? 1 : 2;
@@ -386,7 +381,7 @@ class _SurveyPageState extends State<SurveyPage> {
                             color: const Color(0xFFA30000), // Red as the border color
                             width: 2,
                           ),
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(8), // Adjust the border radius here
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2), // Adjust color opacity for shadow intensity
@@ -469,13 +464,14 @@ class _SurveyPageState extends State<SurveyPage> {
     );
   }
 
+
   Widget Build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double questionTopPadding = screenHeight * 0.1678;
 
     return Scaffold(
       body: _isLoading
-          ? Center(
+          ? const Center(
         child: CircularProgressIndicator(), // Loading indicator
       )
           : Container(
