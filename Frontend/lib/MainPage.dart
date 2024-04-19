@@ -142,7 +142,7 @@ class _MainPageState extends State<MainPage> {
         }
       }
 
-      //_setRestaurantMarkers(restaurants); // Set markers based on the potentially updated restaurants list.
+      _setRestaurantMarkers(restaurants); // Set markers based on the potentially updated restaurants list.
     }
   }
 
@@ -219,7 +219,7 @@ class _MainPageState extends State<MainPage> {
         // Change this if you have unique IDs
         position: restaurant.location,
         infoWindow: InfoWindow(
-            title: restaurant.name, snippet: restaurant.address),
+            title: restaurant.name, snippet: 'Click More Info to view details'),
         // You can also add other properties like icon, etc.
       );
 
@@ -530,8 +530,6 @@ class _MainPageState extends State<MainPage> {
     _updateCameraBounds(bounds);
     // Immediately clear existing markers and add the new one
     setState(() {
-      print("Clearing existing markers.");
-      _restaurantMarkers.clear(); // Clear existing markers
 
       print("Adding new marker for restaurant.");
       _restaurantMarkers.add(
@@ -540,7 +538,7 @@ class _MainPageState extends State<MainPage> {
           position: location,
           infoWindow: InfoWindow(
             title: restaurantName,
-            snippet: 'Click to view details',
+            snippet: 'Click More Info to view details',
           ),
         ),
       );
