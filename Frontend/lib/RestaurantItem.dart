@@ -173,17 +173,6 @@ class RestaurantItem extends StatelessWidget {
                         child: Text('More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
                       ),
                     ),
-                    SizedBox(height: 4.0),
-                    SizedBox(
-                      width: 90,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          handleMarkerCallback(restaurant.location, restaurant.name);
-                        },
-                        child: Text('Display on Map', style: TextStyle(fontSize: 10.0, color: Color(0xFFA30000))),
-                      ),
-                    ),
                   ],
                 ),
               ],
