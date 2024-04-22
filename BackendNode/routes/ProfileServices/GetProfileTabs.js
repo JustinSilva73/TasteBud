@@ -139,7 +139,7 @@ async function getMoreRestaurantDetails(yelpID, yelpLogic) {
             return null; // Or return an error object if that fits your use case better
         }
 
-        const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${yelpResponse.lat},${yelpResponse.lng}&rankby=distance&type=restaurant&name=${encodeURIComponent(yelpResponse.name)}&opennow=true&key=${GOOGLE_MAPS_API_KEY}`);
+        const googleResponse = await axios.get(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${yelpResponse.lat},${yelpResponse.lng}&rankby=distance&type=restaurant&name=${encodeURIComponent(yelpResponse.name)}&key=${GOOGLE_MAPS_API_KEY}`);
 
         if (googleResponse.data.status !== "OK") {
             console.error('Failed to fetch places. Response:', googleResponse.data);

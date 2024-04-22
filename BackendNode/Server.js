@@ -19,7 +19,7 @@ const survey = require('./routes/Survey/survey');
 const userInfo = require('./routes/UserInfo/UserFavorites');   
 const userRestaurant = require('./routes/Restaurant/RestaurantLogic');
 const menu = require('./routes/Restaurant/MenuLogic');
-const profile = require('./routes/ProfileServices/GetProfileTabs');
+const profile = require('./routes/ProfileServices/profileRoutes');
 const directions = require('./routes/Google/GoogleDirectionsLogic');
 
 app.use('/googleAPI', googleMapsRoutes);
