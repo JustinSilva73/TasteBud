@@ -5,7 +5,8 @@ import 'RestaurantItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfileView extends StatefulWidget {
   @override
@@ -19,6 +20,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   String? username;
   List<Restaurant> recentRestaurants = [];
   List<Restaurant> likedRestaurants = [];
+  bool isHovering = false; // Add this line
+  String _imageUrl = 'https://via.placeholder.com/150';
+  File? _image;
 
   @override
   void initState() {
@@ -33,6 +37,46 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    // Let user select photo from gallery
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _image = File(image.path);
+      });
+      // Optionally, you can upload the image to your server
+      _uploadImageToServer(_image!);
+    }
+  }
+
+  Future<void> _takePicture() async {
+    final ImagePicker picker = ImagePicker();
+    // Let user take a new picture
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+
+    if (photo != null) {
+      setState(() {
+        _image = File(photo.path);
+      });
+      // Optionally, you can upload the image to your server
+      _uploadImageToServer(_image!);
+    }
+  }
+
+  Future<void> _uploadImageToServer(File image) async {
+    final Uri uploadImageUri = Uri.parse('http://10.2.2:3000/profile/picturelink/profile-pic?email=$storedEmail');
+    try {
+      final resposne = await http.post(uploadImageUri);
+
+
+    } catch (error) {
+      print("Error uploading Image: $error");
+    }
+
+  }
+
   Future<void> _loadDataAndFetchRestaurants() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     storedEmail = prefs.getString('storedEmail');
@@ -45,7 +89,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   Future<List<Restaurant>> fetchRecentRestaurants(String email) async {
-    final Uri recentRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/recentVisited?email=$email');
+    final Uri recentRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/tabs/recentVisited?email=$email');
     try {
       final response = await http.get(recentRestaurantsUri);
       if (response.statusCode == 200) {
@@ -101,7 +145,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
 
   Future<List<Restaurant>> fetchLikedRestaurants(String email) async {
-    final Uri likedRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/likedRestaurants?email=$email');
+    final Uri likedRestaurantsUri = Uri.parse('http://10.0.2.2:3000/profile/tabs/likedRestaurants?email=$email');
     try {
       final response = await http.get(likedRestaurantsUri);
       if (response.statusCode == 200) {
@@ -139,7 +183,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
 
   Future<String> fetchUsername(String email) async {
-    final Uri url = Uri.parse('http://10.0.2.2:3000/profile/username?email=$email');
+    final Uri url = Uri.parse('http://10.0.2.2:3000/profile/tabs/username?email=$email');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -166,7 +210,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         builder: (context, snapshot)
       {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(
                 color: Color(0xFFA30000),
@@ -174,7 +218,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             ),
           );
         } else if (snapshot.hasError) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(child: Text('Error loading data')),
           );
         }
@@ -183,22 +227,45 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             children: <Widget>[
               Container(
                 width: double.infinity,
-                // This ensures the Container fills the screen width.
-                color: const Color(0xFFA30000),
-                // Hex color code for A30000
+                color: const Color(0xFFA30000), // Hex color code for A30000
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40.0),
-                  // Adjust the padding as needed
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      const CircleAvatar(
-                        radius: 80.0, // Adjust the radius as needed
-                        backgroundImage: NetworkImage(
-                            'https://via.placeholder.com/150'), // Replace with the actual image URL or asset
+                      GestureDetector(
+                        onTapDown: (details) => _showEditPictureMenu(context, details.globalPosition),
+                        child: MouseRegion(
+                          onEnter: (event) => setState(() => isHovering = true),
+                          onExit: (event) => setState(() => isHovering = false),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 80.0,
+                                backgroundImage: _image != null ? FileImage(_image!) : NetworkImage(_imageUrl) as ImageProvider,
+                              ),
+                              if (isHovering)
+                                Container(
+                                  width: 160.0, // Match the CircleAvatar size
+                                  height: 160.0,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.black54,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Edit Profile Pic',
+                                      style: TextStyle(color: Colors.white, fontSize: 16),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      // Provides space between the avatar and the username
+                      const SizedBox(height: 10), // Provides space between the avatar and the username
                       Text(
                         username ?? 'Loading...', // Provide a fallback string
                         style: const TextStyle(
@@ -206,6 +273,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                           fontSize: 24.0,
                         ),
                       ),
+                      // Include any other widgets you want inside this Column
                     ],
                   ),
                 ),
@@ -217,8 +285,8 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                   tabs: [
                     Tab(icon: Image.asset(
                         'assets/VisitedRest.png', width: 50, height: 50)),
-                    Tab(icon: Icon(Icons.thumb_up)),
-                    Tab(icon: Icon(Icons.reviews)),
+                    const Tab(icon: Icon(Icons.thumb_up)),
+                    const Tab(icon: Icon(Icons.reviews)),
                   ],
                   indicatorColor: Colors.red,
                 ),
@@ -232,7 +300,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                     // Liked Restaurants Tab
                     _buildRestaurantList(likedRestaurants),
                     // Placeholder for the third tab
-                    Center(child: Text('Future User Reviews Page')),
+                    const Center(child: Text('Future User Reviews Page')),
                   ],
                 ),
               ),
@@ -258,4 +326,34 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       },
     );
   }
+  void _showEditPictureMenu(BuildContext context, Offset tapPosition) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    showMenu(
+      context: context,
+      items: <PopupMenuEntry>[
+        PopupMenuItem(
+          value: 'gallery',
+          child: Text('Gallery'),
+          // You can add icons as well if you like
+        ),
+        PopupMenuItem(
+          value: 'camera',
+          child: Text('Camera'),
+          // You can add icons as well if you like
+        ),
+      ],
+      position: RelativeRect.fromRect(
+        tapPosition & const Size(40, 40), // smaller rectangle, the touch area
+        Offset.zero & overlay.size, // Bigger rectangle, the entire screen
+      ),
+    ).then((value) {
+      // Handle the selection
+      if (value == 'gallery') {
+        _pickImage();
+      } else if (value == 'camera') {
+        _takePicture();
+      }
+    });
+  }
+
 }

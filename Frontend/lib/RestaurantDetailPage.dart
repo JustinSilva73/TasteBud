@@ -318,9 +318,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
       ),
     );
   }
+  
   Widget _menuItemCard(MenuItem menuItem, bool isLastItem) {
     String priceText = (menuItem.price == 'Price not listed' || menuItem.price.isEmpty)
-        ? 'PNL'
+        ? ''
         : menuItem.price;
 
     String imageUrl = (menuItem.imageURL == 'No image available' || menuItem.imageURL.isEmpty)
@@ -422,7 +423,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
           builder: (BuildContext context, AsyncSnapshot<int?> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Optionally, return a loading spinner if the future is still loading
-          return Center(child: CircularProgressIndicator(color: Color(0xFFA30000)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFA30000)));
         } else if (snapshot.hasError) {
           // Handle the error state
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -563,11 +564,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                                     icon: Icon(
                                       dislikeButton ? Icons.thumb_down : Icons.thumb_down_outlined,
                                       size: 18,
-                                      color: dislikeButton ? Color(0xFFA30000) : Theme.of(context).iconTheme.color,
+                                      color: dislikeButton ? const Color(0xFFA30000) : Theme.of(context).iconTheme.color,
                                     ),
                                     onPressed: _DislikedRestaurant,
                                     padding: EdgeInsets.zero,
-                                    constraints: BoxConstraints(), // Apply constraints to reduce the button size
+                                    constraints: const BoxConstraints(), // Apply constraints to reduce the button size
                                   ),
                                 ],
                               ),
