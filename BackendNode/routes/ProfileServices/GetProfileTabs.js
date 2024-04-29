@@ -163,7 +163,7 @@ async function getMoreRestaurantDetails(yelpID, yelpLogic) {
             price_level: place.price_level || 1, // Assume price_level 1 if undefined
             icon: place.icon,
             opening_hours: place.opening_hours ? place.opening_hours.open_now : false,
-            categories_of_cuisine: yelpResponse.categories.map(category => category.title).join(', '),
+            categories_of_cuisine: yelpResponse.categories[0],
             image_url: yelpResponse.imageUrl,
             url: yelpResponse.url,
             yelpID: yelpResponse.yelpID

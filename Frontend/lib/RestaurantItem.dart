@@ -161,20 +161,7 @@ class RestaurantItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 90,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
 
-                        },
-                        child: Text('More Info', style: TextStyle(fontSize: 12.0, color: Color(0xFFA30000))),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),

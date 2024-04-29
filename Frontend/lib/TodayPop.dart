@@ -31,6 +31,7 @@ class _TodayPopState extends State<TodayPop> {
   void initState() {
     super.initState();
     setCuisineAnswers();
+
   }
 
 
@@ -72,6 +73,7 @@ class _TodayPopState extends State<TodayPop> {
       setState(() {
         popUpQuestions[0].answers = cuisines;
         boxHeight = getBoxHeight(cuisines.length);
+        popUpQuestions[0].selectedAnswers = [];
         print("Cuisines");
         print(cuisines);
       });

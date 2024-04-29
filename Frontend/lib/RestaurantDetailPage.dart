@@ -575,7 +575,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> with Single
                             ),
                           ),
                           _buildButton('Website', Icons.public, () {
-                            _launchWebsiteUrl(widget.restaurant.url);
+                            launchUrlString(widget.restaurant.url);
                           }),
                         ],
                       ),
