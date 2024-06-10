@@ -8,8 +8,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application android:usesCleartextTraffic="true">
         <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBU_QERfJ4gRBq7o0dTNel-bbNUu9uyirc"/>
+            android:name=""
+            android:value=""/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
